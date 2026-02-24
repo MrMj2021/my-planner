@@ -247,7 +247,7 @@
         .weekly-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px; /* جلوگیری از مچاله شدن جدول */
+            min-width: 900px; /* برای 24 سطر و 7 روز کافی است */
         }
 
         .weekly-table th, .weekly-table td {
@@ -289,9 +289,23 @@
             border-radius: 4px;
         }
 
-        /* رنگی شدن خودکار بر اساس کلمات (اختیاری) */
-        .cell-input[data-type="work"] { border-right: 4px solid #ef4444; }
-        .cell-input[data-type="study"] { border-right: 4px solid #3b82f6; }
+        /* بهبود نمایش در موبایل */
+        @media (max-width: 768px) {
+            .weekly-table {
+                min-width: 800px; /* کمتر کنیم تا اسکرول لازم شود ولی ستون‌ها کوچک نشوند */
+            }
+            .cell-input {
+                font-size: 0.75rem; /* کوچک‌تر برای جا شدن */
+                padding: 2px;
+            }
+            .time-label {
+                font-size: 0.7rem;
+                width: 50px;
+            }
+            .weekly-table th, .weekly-table td {
+                padding: 3px;
+            }
+        }
 
         /* ---------- COMMAND PALETTE ---------- */
         .command-palette {
@@ -1223,14 +1237,15 @@
                 });
             },
 
-            /* ---------- NEW WEEKLY PLANNER ---------- */
+            /* ---------- NEW WEEKLY PLANNER (24 HOURS) ---------- */
             renderWeekly(container) {
                 const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-                const hours = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"];
+                // ایجاد 24 ساعت از 00 تا 23
+                const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
                 container.innerHTML = `
                     <div class="glass-card">
-                        <h2>📅 برنامه ریزی هفتگی</h2>
+                        <h2>📅 برنامه ریزی هفتگی (۲۴ ساعته)</h2>
                         <p style="font-size:0.8rem; color:gray; margin-bottom:10px;">نکته: متن را بنویسید و خارج شوید تا ذخیره شود.</p>
                         <div class="sheet-outer-container">
                             <table class="weekly-table">
