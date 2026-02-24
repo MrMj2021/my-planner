@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366f1">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>ZENITH OS | Pro Productivity Suite</title>
@@ -41,6 +44,8 @@
              radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.1) 0px, transparent 50%),
              radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
              radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
+  --input-bg: rgba(255,255,255,0.9);
+  --surface: rgba(255,255,255,0.8);
 }
 
 [data-theme="dark"] {
@@ -52,6 +57,8 @@
   --card-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3);
   --bg-mesh: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.2) 0px, transparent 50%),
              radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.15) 0px, transparent 50%);
+  --input-bg: rgba(30,41,59,0.9);
+  --surface: rgba(30,41,59,0.8);
 }
 
 body {
@@ -61,6 +68,7 @@ body {
   color: var(--text-primary);
   transition: all 0.3s ease;
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* ---------- LAYOUT ---------- */
@@ -138,23 +146,26 @@ body {
 
 .drawer {
   position: fixed;
-  top: 0;
-  right: calc(-1 * var(--drawer-width));
-  width: var(--drawer-width);
-  height: 100vh;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   background: var(--glass);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-left: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border);
+  border-radius: 28px 28px 0 0;
   z-index: 1002;
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  padding: 2rem 0;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  padding: 1rem 0 2rem 0;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 .drawer.open {
-  right: 0;
+  transform: translateY(0);
 }
 .drawer-overlay {
   position: fixed;
@@ -188,36 +199,59 @@ body {
   }
   .hamburger {
     display: flex;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 42px;
+    height: 42px;
+    font-size: 1.5rem;
   }
+
   .main-content {
     margin-right: 0;
-    padding: 1rem 1rem 2rem 1rem;
-    padding-top: calc(var(--header-height) + 1rem);
+    padding: 1rem 1rem 5rem 1rem;
+    padding-top: calc(var(--header-height) + 0.5rem);
   }
+
+  /* Stats grid in two columns */
   .stats-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem;
   }
+  .stat-card {
+    padding: 1rem;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
   .note-grid {
     grid-template-columns: 1fr !important;
   }
+
   .goals-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.75rem;
   }
   .goals-stats {
     width: 100%;
     justify-content: space-between;
+    gap: 0.5rem;
   }
+
   .timer-display {
-    font-size: 3rem !important;
+    font-size: 3.5rem !important;
   }
   .session-stats {
     flex-direction: column;
     gap: 0.5rem;
   }
+  .session-card {
+    margin: 0;
+  }
   .goal-actions {
     flex-wrap: wrap;
+    justify-content: center;
   }
   .timer-controls {
     flex-wrap: wrap;
@@ -227,39 +261,57 @@ body {
     margin: 0 auto;
   }
   .btn {
-    padding: 12px 20px;
-    min-height: 48px;
+    padding: 10px 16px;
+    min-height: 44px;
     width: 100%;
     text-align: center;
   }
   .task-item, .habit-row {
-    padding: 12px;
+    padding: 10px;
   }
   input, select, textarea {
     font-size: 16px;
   }
+
   .weekly-table {
-    min-width: 800px;
+    min-width: 600px;
   }
   .cell-input {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     padding: 2px;
   }
   .time-label {
-    font-size: 0.7rem;
-    width: 50px;
+    font-size: 0.65rem;
+    width: 45px;
   }
   .weekly-table th,
   .weekly-table td {
-    padding: 3px;
+    padding: 2px;
   }
+
+  /* Assistant button */
   .assistant-btn {
     bottom: 20px !important;
+    left: 20px !important;
+    width: 56px;
+    height: 56px;
+    font-size: 26px;
+    z-index: 1002;
   }
+
+  /* Chat window - full width with margins */
   .chat-window {
-    bottom: 80px !important;
-    width: 280px !important;
+    bottom: 85px !important;
     left: 10px !important;
+    width: calc(100% - 20px) !important;
+    max-width: 350px;
+    max-height: 60vh;
+  }
+
+  /* Make sure drawer doesn't cover chat */
+  .drawer.open ~ .assistant-btn,
+  .drawer.open ~ .chat-window {
+    z-index: 1000;
   }
 }
 
@@ -437,12 +489,8 @@ body {
   animation: celebrate 0.5s ease infinite alternate;
 }
 @keyframes celebrate {
-  from {
-    transform: scale(0.8);
-  }
-  to {
-    transform: scale(1.2);
-  }
+  from { transform: scale(0.8); }
+  to { transform: scale(1.2); }
 }
 .goal-progress-container {
   height: 10px;
@@ -563,12 +611,8 @@ body {
   animation: pulse 1s infinite;
 }
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* ---------- FOCUS ENHANCEMENTS ---------- */
@@ -695,26 +739,14 @@ body {
   box-shadow: 0 15px 35px rgba(99, 102, 241, 0.7);
 }
 @keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 @keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
 }
 
 .chat-window {
@@ -811,26 +843,12 @@ body {
   animation-delay: 0.4s;
 }
 @keyframes typing {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-  30% {
-    transform: translateY(-10px);
-    opacity: 1;
-  }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+  30% { transform: translateY(-10px); opacity: 1; }
 }
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .chat-window .chat-input-area {
   display: flex;
@@ -920,19 +938,12 @@ body {
 
 /* ---------- ANIMATIONS ---------- */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .fade-in {
   animation: fadeIn 0.4s ease forwards;
 }
-
     </style>
 </head>
 <body data-theme="light">
@@ -2001,6 +2012,56 @@ body {
                         this.conversationHistory.push({ role: 'bot', text: response });
                         return response;
                     }
+                }
+
+                // NEW: Complete a task via chat
+                if (normalized.includes('تمام کن') || normalized.includes('انجام شد') || normalized.includes('تیک بزن')) {
+                    const taskName = normalized.replace(/.*?(تمام کن|انجام شد|تیک بزن)\s*/i, '').trim();
+                    if (taskName) {
+                        const task = this.state.tasks.find(t => !t.completed && (t.title.includes(taskName) || this.levenshtein(t.title, taskName) <= 2));
+                        if (task) {
+                            task.completed = true;
+                            task.completedAt = new Date().toISOString();
+                            this.save();
+                            this.render();
+                            return `✅ وظیفه "${task.title}" با موفقیت انجام شد.`;
+                        } else {
+                            return "❌ چنین وظیفه‌ای پیدا نکردم.";
+                        }
+                    }
+                }
+
+                // NEW: Most productive day based on focus sessions
+                if (normalized.includes('بیشترین تمرکز') || normalized.includes('پرکارترین روز')) {
+                    const dayCounts = {};
+                    this.state.focusSessions.forEach(s => {
+                        const date = new Date(s.date).toLocaleDateString('fa-IR', { weekday: 'long' });
+                        dayCounts[date] = (dayCounts[date] || 0) + s.duration;
+                    });
+                    let bestDay = null, max = 0;
+                    for (let [day, total] of Object.entries(dayCounts)) {
+                        if (total > max) { max = total; bestDay = day; }
+                    }
+                    if (bestDay) return `🔥 پرکارترین روز شما ${bestDay} با ${Math.round(max/60)} دقیقه تمرکز است.`;
+                    else return "هنوز داده‌ای برای تحلیل وجود ندارد.";
+                }
+
+                // NEW: Weekly focus summary
+                if (normalized.includes('این هفته') && normalized.includes('تمرکز')) {
+                    const oneWeekAgo = new Date();
+                    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                    const total = this.state.focusSessions
+                        .filter(s => new Date(s.date) >= oneWeekAgo)
+                        .reduce((acc, s) => acc + s.duration, 0);
+                    return `⏱️ در هفته گذشته ${Math.round(total/60)} دقیقه تمرکز داشته‌ای.`;
+                }
+
+                // NEW: Recommend a task
+                if (normalized.includes('پیشنهاد') || normalized.includes('چه کاری')) {
+                    const pending = this.state.tasks.filter(t => !t.completed);
+                    if (pending.length === 0) return "همه کارها انجام شده! استراحت کن.";
+                    const random = pending[Math.floor(Math.random() * pending.length)];
+                    return `پیشنهاد می‌کنم: "${random.title}"`;
                 }
 
                 // Check for command patterns (adding tasks, habits, etc.)
