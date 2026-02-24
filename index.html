@@ -48,7 +48,44 @@
             transition: margin-right 0.3s ease;
         }
 
-        /* ----- responsive menu toggle ----- */
+        /* ----- mobile bottom navigation (hidden on desktop) ----- */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--surface-border);
+            z-index: 1000;
+            justify-content: space-around;
+            padding: 8px 4px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+        }
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 0;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: 0.2s;
+            flex: 1;
+            max-width: 70px;
+        }
+        .mobile-nav-item span {
+            font-size: 1.4rem;
+        }
+        .mobile-nav-item.active {
+            color: var(--primary);
+            background: rgba(99,102,241,0.1);
+        }
+
+        /* ----- menu toggle button (only visible on mobile when sidebar is used) ----- */
         .menu-toggle {
             display: none;
             position: fixed;
@@ -68,22 +105,21 @@
             border: none;
         }
 
-        /* ---------- responsive breakpoint ---------- */
+        /* ---------- MOBILE OPTIMIZATION (BOTTOM NAV) ---------- */
         @media (max-width: 768px) {
+            /* hide sidebar and menu toggle, show bottom nav */
             .sidebar {
-                transform: translateX(100%);
-                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                display: none;
             }
-            .sidebar.open {
-                transform: translateX(0);
+            .menu-toggle {
+                display: none !important;
+            }
+            .mobile-bottom-nav {
+                display: flex;
             }
             .main-content {
                 margin-right: 0;
-                padding: 1rem;
-                padding-top: 4.5rem;
-            }
-            .menu-toggle {
-                display: flex;
+                padding: 1rem 1rem 80px 1rem; /* extra bottom padding for bottom nav */
             }
             .stats-grid {
                 grid-template-columns: 1fr !important;
@@ -116,6 +152,17 @@
             .command-palette .cp-box {
                 width: 90%;
                 margin: 0 auto;
+            }
+            /* larger touch targets */
+            .btn {
+                padding: 12px 20px;
+                min-height: 48px;
+            }
+            .task-item, .habit-row {
+                padding: 12px;
+            }
+            input, select {
+                font-size: 16px; /* prevent zoom on focus */
             }
         }
 
@@ -251,6 +298,7 @@
 </head>
 <body data-theme="light">
     <div class="app-container">
+        <!-- Desktop sidebar -->
         <aside class="sidebar" id="sidebar">
             <div style="padding: 2rem; text-align: center;">
                 <h1 style="font-size: 1.5rem; color: var(--primary); font-weight: 900;">ZENITH OS</h1>
@@ -271,10 +319,21 @@
             </div>
         </aside>
 
+        <!-- Mobile bottom navigation (hidden on desktop) -->
+        <nav class="mobile-bottom-nav" id="mobile-nav">
+            <div class="mobile-nav-item active" data-view="dashboard"><span>🏠</span>خانه</div>
+            <div class="mobile-nav-item" data-view="tasks"><span>✅</span>وظایف</div>
+            <div class="mobile-nav-item" data-view="habits"><span>🔥</span>عادت</div>
+            <div class="mobile-nav-item" data-view="notes"><span>📝</span>یادداشت</div>
+            <div class="mobile-nav-item" data-view="goals"><span>🎯</span>هدف</div>
+            <div class="mobile-nav-item" data-view="focus"><span>⏱️</span>تمرکز</div>
+            <div class="mobile-nav-item" data-view="stats"><span>📊</span>آمار</div>
+        </nav>
+
         <main class="main-content" id="app-view"></main>
     </div>
 
-    <!-- responsive menu toggle button -->
+    <!-- responsive menu toggle button (hidden on mobile due to bottom nav) -->
     <button class="menu-toggle" id="menuToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
 
     <div class="command-palette" id="cmd-palette">
@@ -334,10 +393,15 @@
                 sessionStart: null
             },
             alarmInterval: null,
+            isInitialLoad: false,  // flag to prevent overwriting data before first load
 
             // ------------------------------------------------------------
-            // NEW: Firebase save (exclude currentView)
+            // Firebase save with initial load guard
             async save() {
+                if (!this.isInitialLoad) {
+                    console.log("⏳ Initial load not yet complete, skipping save.");
+                    return;
+                }
                 const dataToSave = { ...this.state };
                 delete dataToSave.currentView;   // don't sync UI view
                 try {
@@ -349,7 +413,7 @@
             },
 
             // ------------------------------------------------------------
-            // MODIFIED: init now sets up real‑time listener
+            // MODIFIED: init now sets up real‑time listener with isInitialLoad
             init() {
                 console.log("Connecting to Firebase...");
 
@@ -367,8 +431,12 @@
                         // First visit: save default state to Firebase
                         this.save();
                     }
+                    // Mark initial load complete
+                    this.isInitialLoad = true;
                     // Render after every update (from cloud or local)
                     this.render();
+                    // Update active nav items on both navigations
+                    this.updateActiveNav();
                 });
 
                 // Run daily reset check (will call save if needed)
@@ -381,13 +449,25 @@
                 this.startClock();
                 this.startReminderChecker();
 
-                // Close sidebar on mobile after navigation
-                document.querySelectorAll('.nav-item').forEach(item => {
+                // Close sidebar on mobile after navigation (if sidebar was used)
+                document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
                     item.addEventListener('click', () => {
                         if (window.innerWidth <= 768) {
-                            document.getElementById('sidebar').classList.remove('open');
+                            // bottom nav is used, no sidebar to close
                         }
                     });
+                });
+            },
+
+            // Helper to update active class on both desktop and mobile nav
+            updateActiveNav() {
+                const view = this.state.currentView;
+                document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
+                    if (item.dataset.view === view) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
                 });
             },
 
@@ -406,7 +486,6 @@
             // ------------------------------------------------------------
             // All existing methods (render, dashboard, tasks, habits, notes, goals, focus, stats, utilities)
             // They all call this.save() after modifying state.
-            // (The methods are unchanged except that loadData() is removed and save() now uses Firebase)
             
             render() {
                 const view = document.getElementById('app-view');
@@ -424,9 +503,8 @@
                     case 'goals': this.renderGoals(view); break;
                 }
 
-                if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('open');
-                }
+                // Update active nav in case it changed
+                this.updateActiveNav();
             },
 
             /* ---------- DASHBOARD ---------- */
@@ -1255,12 +1333,16 @@
             },
 
             attachEvents() {
-                document.querySelectorAll('.nav-item').forEach(item => {
+                // Attach click to both desktop nav and mobile nav
+                document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
                     item.onclick = (e) => {
-                        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                        e.currentTarget.classList.add('active');
-                        this.state.currentView = e.currentTarget.dataset.view;
-                        this.render();
+                        const view = e.currentTarget.dataset.view;
+                        if (view) {
+                            document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(n => n.classList.remove('active'));
+                            e.currentTarget.classList.add('active');
+                            this.state.currentView = view;
+                            this.render();
+                        }
                     };
                 });
 
