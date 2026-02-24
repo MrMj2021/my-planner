@@ -19,6 +19,8 @@
             --priority-low: #10b981; --priority-medium: #f59e0b; --priority-high: #ef4444;
             --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             --radius-lg: 16px; --radius-md: 12px;
+            --drawer-width: 280px;
+            --header-height: 70px;
         }
 
         [data-theme="dark"] {
@@ -48,7 +50,7 @@
             transition: margin-right 0.3s ease;
         }
 
-        /* ----- responsive menu toggle ----- */
+        /* ----- desktop menu toggle (hidden on mobile) ----- */
         .menu-toggle {
             display: none;
             position: fixed;
@@ -68,23 +70,86 @@
             border: none;
         }
 
-        /* ---------- responsive breakpoint ---------- */
+        /* ---------- MOBILE HAMBURGER MENU & DRAWER ---------- */
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .hamburger:hover { transform: scale(1.05); }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: calc(-1 * var(--drawer-width));
+            width: var(--drawer-width);
+            height: 100vh;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid var(--surface-border);
+            z-index: 1002;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 0;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+        .drawer.open {
+            right: 0;
+        }
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .drawer-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+        .drawer .nav-item {
+            margin: 4px 16px;
+            border-radius: 12px;
+        }
+
+        /* ---------- RESPONSIVE BREAKPOINT (MOBILE) ---------- */
         @media (max-width: 768px) {
             .sidebar {
-                transform: translateX(100%);
-                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                display: none;
             }
-            .sidebar.open {
-                transform: translateX(0);
+            .menu-toggle {
+                display: none !important;
+            }
+            .hamburger {
+                display: flex;
             }
             .main-content {
                 margin-right: 0;
-                padding: 1rem;
-                padding-top: 4.5rem;
+                padding: 1rem 1rem 2rem 1rem;
+                padding-top: calc(var(--header-height) + 1rem);
             }
-            .menu-toggle {
-                display: flex;
-            }
+            /* Adjust cards and grids for mobile */
             .stats-grid {
                 grid-template-columns: 1fr !important;
             }
@@ -117,27 +182,68 @@
                 width: 90%;
                 margin: 0 auto;
             }
+            .btn {
+                padding: 12px 20px;
+                min-height: 48px;
+                width: 100%;
+                text-align: center;
+            }
+            .task-item, .habit-row {
+                padding: 12px;
+            }
+            input, select, textarea {
+                font-size: 16px;
+            }
+            .weekly-table {
+                min-width: 800px;
+            }
+            .cell-input {
+                font-size: 0.75rem;
+                padding: 2px;
+            }
+            .time-label {
+                font-size: 0.7rem;
+                width: 50px;
+            }
+            .weekly-table th, .weekly-table td {
+                padding: 3px;
+            }
+            /* adjust assistant for mobile */
+            .assistant-btn {
+                bottom: 20px !important;
+            }
+            .chat-window {
+                bottom: 80px !important;
+                width: 280px !important;
+                left: 10px !important;
+            }
         }
 
-        /* ---------- UI COMPONENTS ---------- */
+        /* ---------- UI COMPONENTS (Enhanced) ---------- */
         .glass-card {
             background: var(--surface); backdrop-filter: blur(10px);
             border: 1px solid var(--surface-border); border-radius: var(--radius-lg);
             padding: 1.5rem; box-shadow: var(--card-shadow); margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1);
         }
 
         .btn {
             padding: 0.6rem 1.2rem; border: none; border-radius: var(--radius-md);
-            cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
+            cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(99,102,241,0.3); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(99,102,241,0.4); }
 
         .nav-item {
             padding: 1rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 12px;
             color: var(--text-secondary); transition: 0.2s; border-radius: var(--radius-md); margin: 4px 12px;
         }
         .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .nav-item:hover:not(.active) { background: rgba(99,102,241,0.05); }
 
         /* ---------- DASHBOARD SPECIFIC ---------- */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
@@ -199,7 +305,7 @@
         .timer-running { animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } }
 
-        /* ---------- NEW STYLES FOR FOCUS ENHANCEMENTS ---------- */
+        /* ---------- FOCUS ENHANCEMENTS ---------- */
         .focus-options {
             display: flex;
             gap: 10px;
@@ -235,9 +341,9 @@
             display: inline-block;
         }
 
-        /* ---------- WEEKLY SHEET STYLES (GOOGLE SHEETS LIKE) ---------- */
+        /* ---------- WEEKLY SHEET STYLES ---------- */
         .sheet-outer-container {
-            overflow-x: auto; /* اجازه اسکرول افقی در موبایل */
+            overflow-x: auto;
             background: var(--surface);
             border-radius: 12px;
             border: 1px solid var(--surface-border);
@@ -247,7 +353,7 @@
         .weekly-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px; /* برای 24 سطر و 7 روز کافی است */
+            min-width: 900px;
         }
 
         .weekly-table th, .weekly-table td {
@@ -283,34 +389,175 @@
             transition: 0.2s;
         }
 
-        /* رنگی شدن سلول هنگام نوشتن (مثل گوگل شیت) */
         .cell-input:focus {
             background: #e0e7ff;
             border-radius: 4px;
         }
 
-        /* بهبود نمایش در موبایل */
-        @media (max-width: 768px) {
-            .weekly-table {
-                min-width: 800px; /* کمتر کنیم تا اسکرول لازم شود ولی ستون‌ها کوچک نشوند */
-            }
-            .cell-input {
-                font-size: 0.75rem; /* کوچک‌تر برای جا شدن */
-                padding: 2px;
-            }
-            .time-label {
-                font-size: 0.7rem;
-                width: 50px;
-            }
-            .weekly-table th, .weekly-table td {
-                padding: 3px;
-            }
+        /* ---------- ASSISTANT (SUPER COOL UI & SUPER INTELLIGENT) ---------- */
+        .assistant-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
+            z-index: 1000;
+            animation: float 3s ease-in-out infinite;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .assistant-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 340px;
+            max-height: 500px;
+            background: var(--surface);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            z-index: 1000;
+            border: 1px solid var(--surface-border);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .chat-window .chat-header {
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .chat-window .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: slideIn 0.3s ease;
+        }
+        .message.user {
+            align-self: flex-end;
+        }
+        .message.bot {
+            align-self: flex-start;
+        }
+        .message .bubble {
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .message.user .bubble {
+            background: var(--primary);
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+        .message.bot .bubble {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            width: fit-content;
+            margin-bottom: 5px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-window .chat-input-area {
+            display: flex;
+            padding: 15px;
+            gap: 10px;
+            border-top: 1px solid var(--surface-border);
+            background: var(--surface);
+        }
+        .chat-window .chat-input-area input {
+            flex: 1;
+            border-radius: 30px;
+            border: 1px solid var(--surface-border);
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            outline: none;
+            transition: border 0.2s;
+        }
+        .chat-window .chat-input-area input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+        }
+        .chat-window .chat-input-area button {
+            margin: 0;
+            padding: 12px 20px;
+            border-radius: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+        }
+        .chat-window .chat-input-area button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
         }
 
         /* ---------- COMMAND PALETTE ---------- */
         .command-palette {
             position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-            display: none; justify-content: center; align-items: flex-start; pt: 10vh; z-index: 1000;
+            display: none; justify-content: center; align-items: flex-start; padding-top: 10vh; z-index: 1000;
         }
         .command-palette.open { display: flex; }
         .cp-box { width: 600px; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
@@ -323,6 +570,7 @@
 </head>
 <body data-theme="light">
     <div class="app-container">
+        <!-- Desktop sidebar -->
         <aside class="sidebar" id="sidebar">
             <div style="padding: 2rem; text-align: center;">
                 <h1 style="font-size: 1.5rem; color: var(--primary); font-weight: 900;">ZENITH OS</h1>
@@ -336,7 +584,6 @@
                 <div class="nav-item" data-view="goals"><span>🎯</span> اهداف</div>
                 <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
                 <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
-                <!-- new weekly planner item -->
                 <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
             </nav>
             <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--surface-border);">
@@ -345,11 +592,45 @@
             </div>
         </aside>
 
+        <!-- Mobile hamburger menu and drawer -->
+        <button class="hamburger" id="hamburger" onclick="app.toggleDrawer()">☰</button>
+        <div class="drawer-overlay" id="drawerOverlay" onclick="app.closeDrawer()"></div>
+        <div class="drawer" id="drawer">
+            <div style="padding: 2rem; text-align: center;">
+                <h1 style="font-size: 1.5rem; color: var(--primary); font-weight: 900;">ZENITH OS</h1>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Productivity Reinvented</p>
+            </div>
+            <nav id="drawer-nav">
+                <div class="nav-item active" data-view="dashboard"><span>🏠</span> داشبورد</div>
+                <div class="nav-item" data-view="tasks"><span>✅</span> وظایف</div>
+                <div class="nav-item" data-view="habits"><span>🔥</span> عادات</div>
+                <div class="nav-item" data-view="notes"><span>📝</span> یادداشت‌ها</div>
+                <div class="nav-item" data-view="goals"><span>🎯</span> اهداف</div>
+                <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
+                <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
+                <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
+            </nav>
+            <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--surface-border);">
+                <button class="btn btn-primary" style="width: 100%;" onclick="app.toggleTheme()">🌓 تغییر تم</button>
+            </div>
+        </div>
+
         <main class="main-content" id="app-view"></main>
     </div>
 
-    <!-- responsive menu toggle button -->
+    <!-- desktop menu toggle (hidden on mobile) -->
     <button class="menu-toggle" id="menuToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+    <!-- Assistant UI -->
+    <div class="assistant-btn" onclick="app.toggleChat()">🤖</div>
+    <div id="chat-window" class="chat-window">
+        <div class="chat-header">دستیار هوشمند Zenith</div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input-area">
+            <input id="chat-input" type="text" placeholder="بپرس...">
+            <button onclick="app.sendChatMessage()">ارسال</button>
+        </div>
+    </div>
 
     <div class="command-palette" id="cmd-palette">
         <div class="cp-box">
@@ -359,11 +640,10 @@
     </div>
 
     <script type="module">
-        // 1. Firebase imports (CDN)
+        // 1. Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 2. Firebase configuration (your project)
         const firebaseConfig = {
             apiKey: "AIzaSyCHkZ0VZLWUy22PuHF2eVQAnXm4ESoTiBE",
             authDomain: "zenith-25ca4.firebaseapp.com",
@@ -374,12 +654,10 @@
             measurementId: "G-0PQ50GQJV9"
         };
 
-        // 3. Initialize Firebase
         const fbApp = initializeApp(firebaseConfig);
         const db = getFirestore(fbApp);
         const docRef = doc(db, "zenith_data", "main_profile");
 
-        // 4. Default state (added weeklyData)
         const defaultState = {
             tasks: [],
             habits: [],
@@ -391,10 +669,9 @@
             lastVisit: null,
             focusSessions: [],
             xp: 0,
-            weeklyData: {} // new field for weekly planner
+            weeklyData: {}
         };
 
-        // 5. Main app object (merged with existing methods)
         const app = {
             state: {
                 currentView: 'dashboard',
@@ -409,17 +686,19 @@
                 sessionStart: null
             },
             alarmInterval: null,
-            isInitialLoad: false, // flag to prevent saving before data is loaded
+            isInitialLoad: false,
+            // Assistant memory and context
+            lastIntent: null,
+            lastParams: {},
+            conversationHistory: [], // store last few exchanges
 
-            // ------------------------------------------------------------
-            // MODIFIED: save now respects isInitialLoad
             async save() {
                 if (!this.isInitialLoad) {
                     console.log("⏳ Initial load not yet complete, skipping save.");
                     return;
                 }
                 const dataToSave = { ...this.state };
-                delete dataToSave.currentView;   // don't sync UI view
+                delete dataToSave.currentView;
                 try {
                     await setDoc(docRef, dataToSave);
                     console.log("✅ Synced to Firebase");
@@ -428,54 +707,54 @@
                 }
             },
 
-            // ------------------------------------------------------------
-            // MODIFIED: init with persistence fix
             async init() {
                 this.toast("در حال اتصال به سرور...", "info");
                 
-                // ۱. گوش دادن به تغییرات دیتابیس
                 onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
-                        // فقط اگر دیتایی وجود داشت، جایگزین کن
                         this.state = { 
-                            ...this.state,        // keep currentView, timer, etc.
+                            ...this.state,
                             ...cloudData,
                             currentView: this.state.currentView 
                         };
-                        this.isInitialLoad = true; // تایید بارگذاری اولیه
+                        this.isInitialLoad = true;
                     } else {
-                        // اگر بار اول است و دیتابیسی وجود ندارد
                         this.isInitialLoad = true;
                         this.save(); 
                     }
-                    // Render after every update (from cloud or local)
                     this.render();
-                    // Update active nav items on both navigations
                     this.updateActiveNav();
                 });
 
-                // Run daily reset check (will call save if needed)
                 this.checkMidnightReset();
-
-                // Attach UI events
                 this.attachEvents();
-
-                // Start clock and reminder checker
                 this.startClock();
                 this.startReminderChecker();
 
-                // Close sidebar on mobile after navigation
-                document.querySelectorAll('.nav-item').forEach(item => {
+                // Close drawer on mobile after navigation
+                document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
                     item.addEventListener('click', () => {
                         if (window.innerWidth <= 768) {
-                            document.getElementById('sidebar').classList.remove('open');
+                            this.closeDrawer();
                         }
                     });
                 });
             },
 
-            // Helper to update active class on both desktop and mobile nav (if mobile nav exists)
+            toggleDrawer() {
+                const drawer = document.getElementById('drawer');
+                const overlay = document.getElementById('drawerOverlay');
+                drawer.classList.toggle('open');
+                overlay.classList.toggle('open');
+            },
+            closeDrawer() {
+                const drawer = document.getElementById('drawer');
+                const overlay = document.getElementById('drawerOverlay');
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+            },
+
             updateActiveNav() {
                 const view = this.state.currentView;
                 document.querySelectorAll('.nav-item').forEach(item => {
@@ -485,26 +764,18 @@
                         item.classList.remove('active');
                     }
                 });
-                // If there's a mobile nav in the future, update it too
             },
 
-            // ------------------------------------------------------------
-            // MODIFIED: check midnight reset without localStorage
             checkMidnightReset() {
                 const today = new Date().toLocaleDateString('fa-IR');
                 if (this.state.lastVisit !== today) {
                     this.state.habits.forEach(h => h.completedToday = false);
-                    this.state.tasks = [];               // reset tasks daily
+                    this.state.tasks = [];
                     this.state.lastVisit = today;
-                    this.save();                           // push to Firebase
+                    this.save();
                 }
             },
 
-            // ------------------------------------------------------------
-            // All existing methods (render, dashboard, tasks, habits, notes, goals, focus, stats, utilities)
-            // They all call this.save() after modifying state.
-            // (The methods are unchanged except that loadData() is removed and save() now uses Firebase)
-            
             render() {
                 const view = document.getElementById('app-view');
                 if (!view) return;
@@ -519,11 +790,11 @@
                     case 'stats': this.renderStats(view); break;
                     case 'focus': this.renderFocus(view); break;
                     case 'goals': this.renderGoals(view); break;
-                    case 'weekly': this.renderWeekly(view); break; // new weekly view
+                    case 'weekly': this.renderWeekly(view); break;
                 }
 
                 if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('open');
+                    // nothing
                 }
             },
 
@@ -1052,7 +1323,6 @@
                     <audio id="ambient-audio" loop></audio>
                 `;
 
-                // Event listeners
                 document.getElementById('startTimerBtn').onclick = () => {
                     if (this.timer.running) this.pauseTimer();
                     else this.startTimer();
@@ -1062,19 +1332,16 @@
                 document.getElementById('resetTimerBtn').onclick = () => this.resetTimer();
             },
 
-            // Set focus time preset (in minutes)
             setFocusTime(minutes) {
-                this.pauseTimer(); // stop if running
+                this.pauseTimer();
                 this.timer.totalSeconds = minutes * 60;
                 this.timer.timeLeft = this.timer.totalSeconds;
                 this.updateTimerDisplay();
-                // re-render to update active class
                 if (this.state.currentView === 'focus') {
                     this.renderFocus(document.getElementById('app-view'));
                 }
             },
 
-            // Toggle ambient sound
             toggleSound(type) {
                 const audio = document.getElementById('ambient-audio');
                 if (!audio) return;
@@ -1092,7 +1359,6 @@
                 }
             },
 
-            // توابع کمکی تایمر
             startTimer() {
                 if (this.timer.running) return;
                 this.timer.running = true;
@@ -1124,7 +1390,7 @@
 
             completeTimer() {
                 this.pauseTimer();
-                const duration = this.timer.totalSeconds - this.timer.timeLeft; // in seconds
+                const duration = this.timer.totalSeconds - this.timer.timeLeft;
                 const session = {
                     id: Date.now(),
                     date: new Date().toISOString(),
@@ -1132,16 +1398,13 @@
                 };
                 this.state.focusSessions.push(session);
                 this.state.focusTime += Math.round(duration / 60);
-                
-                // Award XP
                 this.state.xp += 10;
                 this.save();
-                
                 this.toast('🎉 زمان تمرکز به پایان رسید! ۱۰ XP دریافت کردید', 'success');
                 this.playAlarm();
                 this.resetTimer();
                 if (this.state.currentView === 'focus') {
-                    this.render(); // re-render focus page
+                    this.render();
                 }
             },
 
@@ -1168,7 +1431,7 @@
                     .reduce((acc, s) => acc + s.duration, 0) / 60;
             },
 
-            /* ---------- STATS MODULE (CHART.JS) ---------- */
+            /* ---------- STATS MODULE ---------- */
             renderStats(container) {
                 container.innerHTML = `
                     <h2>تحلیل آماری</h2>
@@ -1237,10 +1500,9 @@
                 });
             },
 
-            /* ---------- NEW WEEKLY PLANNER (24 HOURS) ---------- */
+            /* ---------- WEEKLY PLANNER (24 hours) ---------- */
             renderWeekly(container) {
                 const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
-                // ایجاد 24 ساعت از 00 تا 23
                 const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
                 container.innerHTML = `
@@ -1280,14 +1542,323 @@
 
             updateSheet(id, value) {
                 this.state.weeklyData[id] = value;
-                this.save(); // ارسال آنی به Firebase
+                this.save();
                 this.toast("ذخیره شد", "success");
+            },
+
+            /* ---------- ASSISTANT (SUPER INTELLIGENT) ---------- */
+            toggleChat() {
+                const win = document.getElementById('chat-window');
+                win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+                if (win.style.display === 'flex') {
+                    document.getElementById('chat-input').focus();
+                }
+            },
+
+            sendChatMessage() {
+                const input = document.getElementById('chat-input');
+                const msg = input.value.trim();
+                if (!msg) return;
+
+                const chatMessages = document.getElementById('chat-messages');
+                // Add user message
+                const userDiv = document.createElement('div');
+                userDiv.className = 'message user';
+                userDiv.innerHTML = `<div class="bubble">${msg}</div>`;
+                chatMessages.appendChild(userDiv);
+
+                // Show typing indicator
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Process after a short delay
+                setTimeout(() => {
+                    // Remove typing indicator
+                    chatMessages.removeChild(typingDiv);
+
+                    const reply = this.processCommand(msg);
+
+                    const botDiv = document.createElement('div');
+                    botDiv.className = 'message bot';
+                    botDiv.innerHTML = `<div class="bubble">${reply}</div>`;
+                    chatMessages.appendChild(botDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 600);
+
+                input.value = '';
+            },
+
+            // ---------- HELPER: Levenshtein distance for fuzzy matching ----------
+            levenshtein(a, b) {
+                const matrix = [];
+                for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+                for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+                for (let i = 1; i <= b.length; i++) {
+                    for (let j = 1; j <= a.length; j++) {
+                        if (b.charAt(i-1) === a.charAt(j-1)) {
+                            matrix[i][j] = matrix[i-1][j-1];
+                        } else {
+                            matrix[i][j] = Math.min(matrix[i-1][j-1] + 1, matrix[i][j-1] + 1, matrix[i-1][j] + 1);
+                        }
+                    }
+                }
+                return matrix[b.length][a.length];
+            },
+
+            // Normalize Persian text: remove diacritics, normalize ك and ي
+            normalize(text) {
+                return text
+                    .replace(/[ًٌٍَُِّْ]/g, '')
+                    .replace(/[يى]/g, 'ی')
+                    .replace(/[ك]/g, 'ک')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            },
+
+            // ---------- ADVANCED PROCESS COMMAND WITH CONTEXT AND FOLLOW-UPS ----------
+            processCommand(input) {
+                const normalized = this.normalize(input);
+                const words = normalized.split(/\s+/);
+
+                // Add to conversation history (keep last 5)
+                this.conversationHistory.push({ role: 'user', text: normalized });
+                if (this.conversationHistory.length > 5) this.conversationHistory.shift();
+
+                // Check for follow-ups using context
+                if (this.lastIntent && (normalized.includes('بعدی') || normalized.includes('بعد') || normalized.includes('بعدش'))) {
+                    if (this.lastIntent === 'weekly_today') {
+                        const response = this.handleWeeklyTomorrow();
+                        this.conversationHistory.push({ role: 'bot', text: response });
+                        return response;
+                    }
+                }
+
+                // Check for command patterns (adding tasks, habits, etc.)
+                if (normalized.includes('اضافه کن') || normalized.includes('ایجاد کن') || normalized.includes('بساز')) {
+                    if (normalized.includes('تسک') || normalized.includes('وظیفه') || normalized.includes('کار')) {
+                        let title = normalized.replace(/.*?(اضافه کن|ایجاد کن|بساز)\s*(تسک|وظیفه|کار)\s*/i, '').trim();
+                        if (title) {
+                            this.addTask(title);
+                            const response = `✅ وظیفه "${title}" با موفقیت اضافه شد.`;
+                            this.conversationHistory.push({ role: 'bot', text: response });
+                            return response;
+                        } else {
+                            return "لطفا متن وظیفه را هم بنویس.";
+                        }
+                    } else if (normalized.includes('عادت')) {
+                        let name = normalized.replace(/.*?(اضافه کن|ایجاد کن|بساز)\s*(عادت)\s*/i, '').trim();
+                        if (name) {
+                            this.addHabitFromAssistant(name);
+                            const response = `🔥 عادت "${name}" با موفقیت اضافه شد.`;
+                            this.conversationHistory.push({ role: 'bot', text: response });
+                            return response;
+                        } else {
+                            return "لطفا نام عادت را هم بنویس.";
+                        }
+                    }
+                }
+
+                // Define intents with keywords and response generators
+                const intents = [
+                    {
+                        name: 'tasks_pending',
+                        keywords: ['تسک', 'وظیفه', 'کار'],
+                        handler: () => {
+                            const pending = this.state.tasks.filter(t => !t.completed).length;
+                            const total = this.state.tasks.length;
+                            if (total === 0) return "📭 شما هیچ وظیفه‌ای ندارید.";
+                            return `📋 شما ${total} وظیفه داری که ${pending} تاش انجام نشده.`;
+                        }
+                    },
+                    {
+                        name: 'tasks_completed_today',
+                        keywords: ['امروز', 'چند', 'تسک', 'انجام'],
+                        handler: () => {
+                            const today = new Date().toDateString();
+                            const completedToday = this.state.tasks.filter(t => t.completed && new Date(t.completedAt || 0).toDateString() === today).length;
+                            return `✅ امروز ${completedToday} تسک انجام دادی.`;
+                        }
+                    },
+                    {
+                        name: 'last_task',
+                        keywords: ['آخرین', 'تسک', 'وظیفه', 'انجام'],
+                        handler: () => {
+                            const lastTask = this.state.tasks.filter(t => t.completed).pop();
+                            if (lastTask) return `🔚 آخرین کاری که تیک زدی: "${lastTask.title}" بود.`;
+                            return "هنوز هیچ تسکی رو کامل نکردی.";
+                        }
+                    },
+                    {
+                        name: 'habits_today',
+                        keywords: ['عادت', 'امروز', 'چند'],
+                        handler: () => {
+                            const completed = this.state.habits.filter(h => h.completedToday).length;
+                            const total = this.state.habits.length;
+                            if (total === 0) return "📭 هیچ عادتی ثبت نشده.";
+                            return `🔥 امروز ${completed} از ${total} عادت رو انجام دادی.`;
+                        }
+                    },
+                    {
+                        name: 'goals_count',
+                        keywords: ['هدف', 'چند'],
+                        handler: () => {
+                            const total = this.state.goals.length;
+                            const completed = this.state.goals.filter(g => g.current >= g.target).length;
+                            return `🎯 شما ${total} هدف داری که ${completed} تاش کامل شده.`;
+                        }
+                    },
+                    {
+                        name: 'xp',
+                        keywords: ['xp', 'امتیاز'],
+                        handler: () => `✨ شما ${this.state.xp} امتیاز XP داری.`
+                    },
+                    {
+                        name: 'focus_today',
+                        keywords: ['تمرکز', 'امروز', 'چند'],
+                        handler: () => {
+                            const minutes = this.totalFocusToday();
+                            return `⏱️ امروز ${Math.round(minutes)} دقیقه تمرکز داشتی.`;
+                        }
+                    },
+                    {
+                        name: 'reminders_today',
+                        keywords: ['یادآور', 'امروز', 'چند'],
+                        handler: () => {
+                            const todayReminders = this.state.reminders;
+                            if (todayReminders.length === 0) return "⏰ هیچ یادآوری برای امروز نداری.";
+                            return `⏰ ${todayReminders.length} یادآور داری: ${todayReminders.map(r => r.text).join('، ')}`;
+                        }
+                    },
+                    {
+                        name: 'weekly_today',
+                        keywords: ['برنامه', 'امروز', 'چی'],
+                        handler: () => {
+                            const todayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
+                            const today = this.getWeekdayName(todayName);
+                            const tasksToday = Object.entries(this.state.weeklyData)
+                                .filter(([key]) => key.startsWith(today))
+                                .map(([_, val]) => val)
+                                .filter(v => v.trim() !== "");
+                            const response = tasksToday.length > 0 
+                                ? `📅 امروز ${today} این کارها رو داری: ${tasksToday.join('، ')}`
+                                : `📅 امروز ${today} برنامه خاصی نداری.`;
+                            this.lastIntent = 'weekly_today';
+                            return response;
+                        }
+                    },
+                    {
+                        name: 'weekly_tomorrow',
+                        keywords: ['برنامه', 'فردا', 'چی'],
+                        handler: () => {
+                            return this.handleWeeklyTomorrow();
+                        }
+                    },
+                    {
+                        name: 'notes_search',
+                        keywords: ['یادداشت', 'درباره', 'جستجو'],
+                        handler: (input) => {
+                            const query = input.replace(/یادداشت|درباره|جستجو/gi, '').trim();
+                            if (!query) return "چی رو در یادداشت‌ها جستجو کنم؟";
+                            const found = this.state.notes.filter(n => n.title.includes(query) || n.content.includes(query));
+                            if (found.length === 0) return `❌ هیچ یادداشتی درباره "${query}" پیدا نکردم.`;
+                            return `📝 ${found.length} یادداشت پیدا کردم. مثلاً: "${found[0].title}"`;
+                        }
+                    },
+                    {
+                        name: 'summary',
+                        keywords: ['خلاصه', 'امروز', 'گزارش'],
+                        handler: () => {
+                            const tasksPending = this.state.tasks.filter(t => !t.completed).length;
+                            const habitsCompleted = this.state.habits.filter(h => h.completedToday).length;
+                            const focusMinutes = Math.round(this.totalFocusToday());
+                            const xp = this.state.xp;
+                            return `📊 خلاصه امروز:\n✅ وظایف انجام نشده: ${tasksPending}\n🔥 عادات انجام شده: ${habitsCompleted}\n⏱️ تمرکز: ${focusMinutes} دقیقه\n✨ XP: ${xp}`;
+                        }
+                    }
+                ];
+
+                // Fuzzy match keywords to find best intent
+                let bestIntent = null;
+                let bestScore = 0;
+                for (const intent of intents) {
+                    let score = 0;
+                    for (const kw of intent.keywords) {
+                        for (const word of words) {
+                            const dist = this.levenshtein(kw, word);
+                            if (dist <= 1) {
+                                score += 2;
+                            } else if (word.includes(kw) || kw.includes(word)) {
+                                score += 1;
+                            }
+                        }
+                    }
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestIntent = intent;
+                    }
+                }
+
+                if (bestIntent && bestScore > 0) {
+                    this.lastIntent = bestIntent.name;
+                    const response = bestIntent.handler(input);
+                    this.conversationHistory.push({ role: 'bot', text: response });
+                    return response;
+                }
+
+                // Check if it's a follow-up about "بعدی" without context
+                if (normalized.includes('بعدی') || normalized.includes('بعد')) {
+                    return "منظورت چیه؟ می‌تونی بپرسی 'برنامه فردا' یا 'بعدی' بعد از اینکه یه چیزی پرسیدی.";
+                }
+
+                // Default fallback
+                const fallback = "🤔 متوجه نشدم. می‌تونی درباره تسک‌ها، عادات، اهداف، برنامه هفتگی، یادآورها، تمرکز و امتیازات از من بپرسی.";
+                this.conversationHistory.push({ role: 'bot', text: fallback });
+                return fallback;
+            },
+
+            handleWeeklyTomorrow() {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(tomorrow);
+                const tomorrowKey = this.getWeekdayName(tomorrowName);
+                const tasksTomorrow = Object.entries(this.state.weeklyData)
+                    .filter(([key]) => key.startsWith(tomorrowKey))
+                    .map(([_, val]) => val)
+                    .filter(v => v.trim() !== "");
+                return tasksTomorrow.length > 0 
+                    ? `📅 فردا ${tomorrowName} این کارها رو داری: ${tasksTomorrow.join('، ')}`
+                    : `📅 فردا ${tomorrowName} برنامه خاصی نداری.`;
+            },
+
+            getWeekdayName(faName) {
+                const map = {
+                    "شنبه": "شنبه",
+                    "یکشنبه": "یکشنبه",
+                    "دوشنبه": "دوشنبه",
+                    "سه‌شنبه": "سه‌شنبه",
+                    "چهارشنبه": "چهارشنبه",
+                    "پنجشنبه": "پنجشنبه",
+                    "جمعه": "جمعه"
+                };
+                return map[faName] || faName;
+            },
+
+            addHabitFromAssistant(name) {
+                if (!name) return;
+                const newHabit = { id: Date.now(), name, streak: 0, completedToday: false, lastDone: null };
+                this.state.habits.push(newHabit);
+                this.save();
+                this.toast('عادت جدید اضافه شد');
+                if (this.state.currentView === 'habits') this.renderHabitsList();
             },
 
             /* ---------- CORE UTILITIES ---------- */
             addTask(title) {
                 if(!title) return;
-                this.state.tasks.push({ id: Date.now(), title, completed: false, priority: 'medium' });
+                this.state.tasks.push({ id: Date.now(), title, completed: false, priority: 'medium', completedAt: null });
                 this.save();
                 this.render();
                 this.toast('وظیفه با موفقیت اضافه شد');
@@ -1295,7 +1866,10 @@
 
             toggleTask(id) {
                 const t = this.state.tasks.find(t => t.id === id);
-                if(t) t.completed = !t.completed;
+                if(t) {
+                    t.completed = !t.completed;
+                    t.completedAt = t.completed ? new Date().toISOString() : null;
+                }
                 this.save();
                 this.render();
             },
@@ -1402,10 +1976,13 @@
             attachEvents() {
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.onclick = (e) => {
-                        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                        e.currentTarget.classList.add('active');
-                        this.state.currentView = e.currentTarget.dataset.view;
-                        this.render();
+                        const view = e.currentTarget.dataset.view;
+                        if (view) {
+                            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                            e.currentTarget.classList.add('active');
+                            this.state.currentView = view;
+                            this.render();
+                        }
                     };
                 });
 
@@ -1417,6 +1994,10 @@
                     }
                     if (e.key === 'Escape') {
                         document.getElementById('cmd-palette').classList.remove('open');
+                        // also close chat if open
+                        const chat = document.getElementById('chat-window');
+                        if (chat.style.display === 'flex') chat.style.display = 'none';
+                        this.closeDrawer();
                     }
                 });
 
@@ -1433,10 +2014,7 @@
             }
         };
 
-        // Expose app globally for inline event handlers
         window.app = app;
-
-        // Start the app
         app.init();
     </script>
 </body>
