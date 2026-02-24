@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>ZENITH OS | Pro Productivity Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* ---------- RESET & VARIABLES ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Vazirmatn', 'Inter', sans-serif; }
+        
+        :root {
+            --primary: #6366f1; --primary-light: #818cf8; --primary-dark: #4f46e5;
+            --accent: #f43f5e; --success: #10b981; --warning: #f59e0b; --info: #0ea5e9;
+            --bg-base: #f8fafc; --surface: rgba(255, 255, 255, 0.85);
+            --surface-border: rgba(255, 255, 255, 0.5);
+            --text-primary: #1e293b; --text-secondary: #64748b;
+            --priority-low: #10b981; --priority-medium: #f59e0b; --priority-high: #ef4444;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --radius-lg: 16px; --radius-md: 12px;
+        }
+
+        [data-theme="dark"] {
+            --bg-base: #0f172a; --surface: rgba(30, 41, 59, 0.8);
+            --surface-border: rgba(255, 255, 255, 0.05);
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8;
+            --card-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        body { background: var(--bg-base); color: var(--text-primary); transition: all 0.3s ease; overflow-x: hidden; }
+
+        /* ---------- LAYOUT ---------- */
+        .app-container { display: flex; min-height: 100vh; position: relative; }
+        
+        .sidebar {
+            width: 260px; background: var(--surface); backdrop-filter: blur(12px);
+            border-left: 1px solid var(--surface-border); display: flex; flex-direction: column;
+            position: fixed; height: 100vh; z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .main-content { 
+            flex: 1; 
+            margin-right: 260px; 
+            padding: 2rem; 
+            min-height: 100vh;
+            transition: margin-right 0.3s ease;
+        }
+
+        /* ----- responsive menu toggle ----- */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 200;
+            background: var(--primary);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+            cursor: pointer;
+            border: none;
+        }
+
+        /* ---------- responsive breakpoint ---------- */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-right: 0;
+                padding: 1rem;
+                padding-top: 4.5rem;
+            }
+            .menu-toggle {
+                display: flex;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .note-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .goals-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .goals-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .timer-display {
+                font-size: 3rem !important;
+            }
+            .session-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .goal-actions {
+                flex-wrap: wrap;
+            }
+            .timer-controls {
+                flex-wrap: wrap;
+            }
+            .command-palette .cp-box {
+                width: 90%;
+                margin: 0 auto;
+            }
+        }
+
+        /* ---------- UI COMPONENTS ---------- */
+        .glass-card {
+            background: var(--surface); backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border); border-radius: var(--radius-lg);
+            padding: 1.5rem; box-shadow: var(--card-shadow); margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem; border: none; border-radius: var(--radius-md);
+            cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+        .nav-item {
+            padding: 1rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            color: var(--text-secondary); transition: 0.2s; border-radius: var(--radius-md); margin: 4px 12px;
+        }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        /* ---------- DASHBOARD SPECIFIC ---------- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+        .stat-card { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        
+        /* ---------- MODULES ---------- */
+        .task-item { 
+            display: flex; align-items: center; gap: 12px; padding: 1rem; 
+            border-bottom: 1px solid var(--surface-border); transition: 0.2s;
+        }
+        .task-item:hover { background: rgba(99, 102, 241, 0.05); }
+        .task-item.dragging { opacity: 0.5; border: 2px dashed var(--primary); }
+
+        .habit-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--surface-border); }
+        .habit-streak { background: linear-gradient(45deg, #f43f5e, #fb923c); color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; }
+
+        .note-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+        .note-card { height: 200px; display: flex; flex-direction: column; cursor: pointer; transition: 0.3s; }
+        .note-card:hover { transform: translateY(-5px); }
+        
+        /* ---------- GOALS MODULE ---------- */
+        .goals-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .goals-stats { display: flex; gap: 1.5rem; }
+        .goal-card { 
+            background: var(--surface); backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border); border-radius: var(--radius-lg);
+            padding: 1.5rem; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .goal-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.2); }
+        .goal-card.completed::after {
+            content: "🎉"; font-size: 3rem; position: absolute; bottom: 10px; left: 10px; opacity: 0.3;
+            animation: celebrate 0.5s ease infinite alternate;
+        }
+        @keyframes celebrate { from { transform: scale(0.8); } to { transform: scale(1.2); } }
+        .goal-progress-container { height: 10px; background: var(--surface-border); border-radius: 20px; margin: 1rem 0; overflow: hidden; }
+        .goal-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.5s ease; border-radius: 20px; }
+        .goal-milestones { margin-top: 1rem; }
+        .milestone-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 0.9rem; }
+        .milestone-checkbox { width: 18px; height: 18px; cursor: pointer; }
+        .goal-actions { display: flex; gap: 5px; margin-top: 1rem; justify-content: flex-end; }
+        .goal-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: var(--primary-light); color: white; display: inline-block; }
+
+        /* ---------- FOCUS MODULE (پیشرفته) ---------- */
+        .focus-container { text-align: center; }
+        .timer-display {
+            font-size: 5rem; font-weight: 800; font-family: 'Inter', monospace;
+            color: var(--primary); line-height: 1.2; margin: 1rem 0;
+        }
+        .timer-controls { display: flex; gap: 1rem; justify-content: center; margin: 2rem 0; flex-wrap: wrap; }
+        .timer-progress { height: 8px; background: var(--surface-border); border-radius: 20px; margin: 1rem 0; overflow: hidden; }
+        .timer-progress-fill { height: 100%; background: var(--primary); width: 100%; transition: width 0.1s linear; }
+        .session-stats { display: flex; justify-content: space-around; margin: 2rem 0; }
+        .session-card { text-align: center; padding: 1rem; background: var(--surface); border-radius: var(--radius-md); flex:1; margin:0 5px; }
+        .session-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        .session-label { font-size: 0.8rem; color: var(--text-secondary); }
+        .session-list { max-height: 200px; overflow-y: auto; margin-top: 1rem; }
+        .session-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px dashed var(--surface-border); }
+        .timer-running { animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.7; } }
+
+        /* ---------- NEW STYLES FOR FOCUS ENHANCEMENTS ---------- */
+        .focus-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .focus-presets {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .preset-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--surface-border);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--primary);
+            transition: 0.3s;
+        }
+        .preset-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .xp-badge {
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        /* ---------- COMMAND PALETTE ---------- */
+        .command-palette {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: flex-start; pt: 10vh; z-index: 1000;
+        }
+        .command-palette.open { display: flex; }
+        .cp-box { width: 600px; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .cp-input { width: 100%; padding: 1.2rem; border: none; background: transparent; color: var(--text-primary); outline: none; font-size: 1.1rem; }
+
+        /* ---------- ANIMATIONS ---------- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div style="padding: 2rem; text-align: center;">
+                <h1 style="font-size: 1.5rem; color: var(--primary); font-weight: 900;">ZENITH OS</h1>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">Productivity Reinvented</p>
+            </div>
+            <nav id="main-nav">
+                <div class="nav-item active" data-view="dashboard"><span>🏠</span> داشبورد</div>
+                <div class="nav-item" data-view="tasks"><span>✅</span> وظایف</div>
+                <div class="nav-item" data-view="habits"><span>🔥</span> عادات</div>
+                <div class="nav-item" data-view="notes"><span>📝</span> یادداشت‌ها</div>
+                <div class="nav-item" data-view="goals"><span>🎯</span> اهداف</div>
+                <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
+                <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
+            </nav>
+            <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--surface-border);">
+                <button class="btn btn-primary" style="width: 100%;" onclick="app.toggleTheme()">🌓 تغییر تم</button>
+                <p style="margin-top: 10px; font-size: 0.7rem; text-align: center; color: var(--text-secondary);">Ctrl + K برای دستورات</p>
+            </div>
+        </aside>
+
+        <main class="main-content" id="app-view"></main>
+    </div>
+
+    <!-- responsive menu toggle button -->
+    <button class="menu-toggle" id="menuToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+    <div class="command-palette" id="cmd-palette">
+        <div class="cp-box">
+            <input type="text" class="cp-input" id="cp-input" placeholder="دستور خود را وارد کنید (مثلا: 'افزودن تسک خرید نان')...">
+            <div id="cp-results" style="max-height: 300px; overflow-y: auto; padding: 10px;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 1. Firebase imports (CDN)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 2. Firebase configuration (your project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHkZ0VZLWUy22PuHF2eVQAnXm4ESoTiBE",
+            authDomain: "zenith-25ca4.firebaseapp.com",
+            projectId: "zenith-25ca4",
+            storageBucket: "zenith-25ca4.firebasestorage.app",
+            messagingSenderId: "881002534991",
+            appId: "1:881002534991:web:e3656fd0ed26c90266b23a",
+            measurementId: "G-0PQ50GQJV9"
+        };
+
+        // 3. Initialize Firebase
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fbApp);
+        const docRef = doc(db, "zenith_data", "main_profile");
+
+        // 4. Default state (used when no document exists)
+        const defaultState = {
+            tasks: [],
+            habits: [],
+            notes: [],
+            goals: [],
+            reminders: [],
+            focusTime: 0,
+            history: { focus: [10, 25, 15, 45, 30, 20, 50] },
+            lastVisit: null,
+            focusSessions: [],
+            xp: 0
+        };
+
+        // 5. Main app object (merged with existing methods)
+        const app = {
+            state: {
+                currentView: 'dashboard',
+                ...defaultState
+            },
+            charts: {},
+            timer: { 
+                totalSeconds: 25 * 60, 
+                timeLeft: 25 * 60, 
+                interval: null, 
+                running: false,
+                sessionStart: null
+            },
+            alarmInterval: null,
+
+            // ------------------------------------------------------------
+            // NEW: Firebase save (exclude currentView)
+            async save() {
+                const dataToSave = { ...this.state };
+                delete dataToSave.currentView;   // don't sync UI view
+                try {
+                    await setDoc(docRef, dataToSave);
+                    console.log("✅ Synced to Firebase");
+                } catch (error) {
+                    console.error("❌ Firebase save error:", error);
+                }
+            },
+
+            // ------------------------------------------------------------
+            // MODIFIED: init now sets up real‑time listener
+            init() {
+                console.log("Connecting to Firebase...");
+
+                // Set up real‑time listener
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const cloudData = docSnap.data();
+                        // Merge cloud data, but keep current view
+                        this.state = { 
+                            ...this.state,        // keep currentView, timer, etc.
+                            ...cloudData,
+                            currentView: this.state.currentView 
+                        };
+                    } else {
+                        // First visit: save default state to Firebase
+                        this.save();
+                    }
+                    // Render after every update (from cloud or local)
+                    this.render();
+                });
+
+                // Run daily reset check (will call save if needed)
+                this.checkMidnightReset();
+
+                // Attach UI events
+                this.attachEvents();
+
+                // Start clock and reminder checker
+                this.startClock();
+                this.startReminderChecker();
+
+                // Close sidebar on mobile after navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        if (window.innerWidth <= 768) {
+                            document.getElementById('sidebar').classList.remove('open');
+                        }
+                    });
+                });
+            },
+
+            // ------------------------------------------------------------
+            // MODIFIED: check midnight reset without localStorage
+            checkMidnightReset() {
+                const today = new Date().toLocaleDateString('fa-IR');
+                if (this.state.lastVisit !== today) {
+                    this.state.habits.forEach(h => h.completedToday = false);
+                    this.state.tasks = [];               // reset tasks daily
+                    this.state.lastVisit = today;
+                    this.save();                           // push to Firebase
+                }
+            },
+
+            // ------------------------------------------------------------
+            // All existing methods (render, dashboard, tasks, habits, notes, goals, focus, stats, utilities)
+            // They all call this.save() after modifying state.
+            // (The methods are unchanged except that loadData() is removed and save() now uses Firebase)
+            
+            render() {
+                const view = document.getElementById('app-view');
+                if (!view) return;
+                view.innerHTML = '';
+                view.className = 'main-content fade-in';
+
+                switch(this.state.currentView) {
+                    case 'dashboard': this.renderDashboard(view); break;
+                    case 'tasks': this.renderTasks(view); break;
+                    case 'habits': this.renderHabits(view); break;
+                    case 'notes': this.renderNotes(view); break;
+                    case 'stats': this.renderStats(view); break;
+                    case 'focus': this.renderFocus(view); break;
+                    case 'goals': this.renderGoals(view); break;
+                }
+
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            },
+
+            /* ---------- DASHBOARD ---------- */
+            renderDashboard(container) {
+                const completedTasks = this.state.tasks.filter(t => t.completed).length;
+                const prodScore = this.calculateProductivityScore();
+                
+                container.innerHTML = `
+                    <header style="display:flex; justify-content:space-between; align-items:center; mb: 2rem; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <h2 style="font-size: 1.8rem;">سلام! خوش آمدی ✨</h2>
+                            <p id="clock" style="color: var(--primary); font-weight: 700;"></p>
+                        </div>
+                        <div class="glass-card" style="padding: 0.5rem 1.5rem; text-align:center;">
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">امتیاز بهره‌وری</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:${prodScore > 70 ? 'var(--success)' : 'var(--warning)'}">${prodScore}%</div>
+                        </div>
+                    </header>
+
+                    <div class="stats-grid">
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" id="taskCounter">0</div>
+                            <div style="color: var(--text-secondary);">وظایف انجام شده</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" id="habitCounter">0</div>
+                            <div style="color: var(--text-secondary);">عادات فعال</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-value" id="focusCounter">0</div>
+                            <div style="color: var(--text-secondary);">دقیقه تمرکز امروز</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                        <div class="glass-card">
+                            <h3>وظایف سریع</h3>
+                            <div style="display:flex; gap:10px; margin: 15px 0; flex-wrap:wrap;">
+                                <input type="text" id="quickTaskInput" class="cp-input" style="border: 1px solid var(--surface-border); border-radius:10px; flex:1; min-width:150px;" placeholder="افزودن سریع وظیفه...">
+                                <button id="quickAddTaskBtn" class="btn btn-primary">افزودن</button>
+                            </div>
+                            <div id="dashboard-tasks"></div>
+                        </div>
+                        <div class="glass-card">
+                            <h3>نقل قول روز</h3>
+                            <p style="font-style:italic; margin-top:15px; color:var(--text-secondary);">"بهترین راه برای پیش‌بینی آینده، ساختن آن است."</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="margin-top: 1.5rem;">
+                        <h3>یادآورهای امروز</h3>
+                        <div style="margin-top: 15px;">
+                            ${this.state.reminders.map(r => `
+                                <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--surface-border); flex-wrap:wrap;">
+                                    <span><span style="font-weight:600; color:var(--primary);">${r.time}</span> - ${r.text}</span>
+                                    <button class="btn" style="padding:2px 8px; color:var(--accent);" onclick="app.deleteReminder(${r.id})">🗑️</button>
+                                </div>
+                            `).join('')}
+                            ${this.state.reminders.length === 0 ? '<p style="color:var(--text-secondary);">یادآوری برای امروز ثبت نشده</p>' : ''}
+                        </div>
+                        <div style="display:flex; gap:5px; margin-top:15px; flex-wrap:wrap;">
+                            <input type="text" id="reminder-text" placeholder="متن یادآور..." style="flex:2; min-width:150px; background:var(--input-bg); border:1px solid var(--surface-border); border-radius:10px; padding:8px;">
+                            <input type="time" id="reminder-time" style="flex:1; min-width:120px; background:var(--input-bg); border:1px solid var(--surface-border); border-radius:10px; padding:8px;">
+                            <button class="btn btn-primary" onclick="app.addReminder(document.getElementById('reminder-text').value, document.getElementById('reminder-time').value)">➕</button>
+                        </div>
+                    </div>
+                `;
+
+                this.animateValue("taskCounter", 0, completedTasks, 1000);
+                this.animateValue("habitCounter", 0, this.state.habits.length, 1000);
+                this.animateValue("focusCounter", 0, this.totalFocusToday(), 1000);
+
+                document.getElementById('quickAddTaskBtn').onclick = () => {
+                    const val = document.getElementById('quickTaskInput').value;
+                    if(val) this.addTask(val);
+                };
+
+                this.renderMiniTasks();
+            },
+
+            renderMiniTasks() {
+                const list = document.getElementById('dashboard-tasks');
+                const recent = this.state.tasks.slice(-5).reverse();
+                list.innerHTML = recent.map(t => `
+                    <div class="task-item" style="border:none; padding:8px 0;">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="app.toggleTask(${t.id})">
+                        <span style="${t.completed ? 'text-decoration:line-through; opacity:0.5' : ''}">${t.title}</span>
+                    </div>
+                `).join('') || '<p style="text-align:center; color:var(--text-secondary);">لیست خالی است</p>';
+            },
+
+            /* ---------- TASKS MODULE ---------- */
+            renderTasks(container) {
+                container.innerHTML = `
+                    <div class="glass-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                            <h2>لیست وظایف</h2>
+                            <button class="btn btn-primary" onclick="app.addTaskPrompt()">+ وظیفه جدید</button>
+                        </div>
+                        <div id="task-list" style="margin-top: 20px;"></div>
+                    </div>
+                `;
+                this.renderTaskList();
+            },
+
+            renderTaskList() {
+                const list = document.getElementById('task-list');
+                list.innerHTML = this.state.tasks.map((t, idx) => `
+                    <div class="task-item" draggable="true" data-id="${t.id}" ondragstart="app.handleDragStart(event)">
+                        <div style="width:4px; height:20px; background:var(--priority-${t.priority}); border-radius:2px;"></div>
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="app.toggleTask(${t.id})">
+                        <span style="flex:1; ${t.completed ? 'text-decoration:line-through; color:var(--text-secondary)' : ''}">${t.title}</span>
+                        <button class="btn" style="color:var(--accent)" onclick="app.deleteTask(${t.id})">🗑️</button>
+                    </div>
+                `).join('');
+            },
+
+            handleDragStart(e) {
+                e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id);
+                e.currentTarget.classList.add('dragging');
+            },
+
+            addTaskPrompt() {
+                const title = prompt("عنوان وظیفه جدید:");
+                if (title) this.addTask(title);
+            },
+
+            /* ---------- HABITS MODULE ---------- */
+            renderHabits(container) {
+                container.innerHTML = `
+                    <div class="glass-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; mb:1rem; flex-wrap:wrap; gap:1rem;">
+                            <h2>ردیاب عادات</h2>
+                            <button class="btn btn-primary" onclick="app.addHabitPrompt()">+ عادت جدید</button>
+                        </div>
+                        <div id="habits-list"></div>
+                    </div>
+                `;
+                this.renderHabitsList();
+            },
+
+            renderHabitsList() {
+                const list = document.getElementById('habits-list');
+                if (this.state.habits.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-secondary);">هنوز عادتی اضافه نکرده‌اید.</div>`;
+                    return;
+                }
+
+                list.innerHTML = this.state.habits.map(h => `
+                    <div class="habit-row">
+                        <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                            <div class="habit-streak">🔥 ${h.streak || 0}</div>
+                            <div>
+                                <div style="font-weight:700;">${h.name}</div>
+                                <div style="font-size:0.75rem; color:var(--text-secondary);">آخرین تیک: ${h.lastDone || '---'}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="btn ${h.completedToday ? 'btn-primary' : ''}" 
+                                    style="border:1px solid var(--primary)" 
+                                    onclick="app.toggleHabit(${h.id})">
+                                ${h.completedToday ? '✅ انجام شد' : 'تیک امروز'}
+                            </button>
+                            <button class="btn" style="color:var(--accent)" onclick="app.deleteHabit(${h.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            addHabitPrompt() {
+                const name = prompt("نام عادت جدید را وارد کنید:");
+                if (name) {
+                    const newHabit = { id: Date.now(), name, streak: 0, completedToday: false, lastDone: null };
+                    this.state.habits.push(newHabit);
+                    this.save();
+                    this.renderHabitsList();
+                }
+            },
+
+            toggleHabit(id) {
+                const h = this.state.habits.find(h => h.id === id);
+                if (h) {
+                    h.completedToday = !h.completedToday;
+                    if (h.completedToday) {
+                        h.streak++;
+                        h.lastDone = new Date().toLocaleDateString('fa-IR');
+                    } else {
+                        h.streak--;
+                    }
+                    this.save();
+                    this.renderHabitsList();
+                }
+            },
+
+            deleteHabit(id) {
+                if (confirm('آیا از حذف این عادت اطمینان دارید؟')) {
+                    this.state.habits = this.state.habits.filter(h => h.id !== id);
+                    this.save();
+                    this.renderHabitsList();
+                }
+            },
+
+            /* ---------- NOTES MODULE ---------- */
+            renderNotes(container) {
+                container.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; flex-wrap:wrap; gap:1rem;">
+                        <h2>دفترچه یادداشت</h2>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <input type="text" id="noteSearch" class="cp-input" style="width:200px; border:1px solid var(--surface-border); border-radius:10px; padding:5px 15px;" placeholder="جستجو...">
+                            <button class="btn btn-primary" onclick="app.addNote()">+ یادداشت جدید</button>
+                        </div>
+                    </div>
+                    <div id="notes-grid" class="note-grid"></div>
+                `;
+                this.renderNotesList();
+                document.getElementById('noteSearch').oninput = (e) => this.renderNotesList(e.target.value);
+            },
+
+            renderNotesList(filter = '') {
+                const grid = document.getElementById('notes-grid');
+                const filtered = this.state.notes.filter(n => n.title.includes(filter) || n.content.includes(filter));
+                
+                grid.innerHTML = filtered.map(n => `
+                    <div class="glass-card note-card fade-in" onclick="app.editNote(${n.id})">
+                        <h3 style="margin-bottom:10px;">${n.title}</h3>
+                        <p style="font-size:0.85rem; color:var(--text-secondary); flex:1; overflow:hidden;">${n.content.substring(0, 100)}...</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top:1px solid var(--surface-border); pt:10px;">
+                            <span style="font-size:0.7rem;">${n.date}</span>
+                            <button class="btn" style="color:var(--accent); padding:2px;" onclick="event.stopPropagation(); app.deleteNote(${n.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('') || '<p style="grid-column:1/-1; text-align:center;">یادداشتی یافت نشد</p>';
+            },
+
+            addNote() {
+                const newNote = { id: Date.now(), title: 'بدون عنوان', content: '', date: new Date().toLocaleDateString('fa-IR') };
+                this.state.notes.push(newNote);
+                this.save();
+                this.editNote(newNote.id);
+            },
+
+            editNote(id) {
+                const n = this.state.notes.find(n => n.id === id);
+                const view = document.getElementById('app-view');
+                view.innerHTML = `
+                    <div class="glass-card fade-in" style="height: 80vh; display:flex; flex-direction:column;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; mb:1rem; flex-wrap:wrap;">
+                            <input type="text" id="editNoteTitle" value="${n.title}" style="background:transparent; border:none; font-size:1.5rem; font-weight:700; color:var(--text-primary); outline:none; width:70%; min-width:200px;">
+                            <button class="btn btn-primary" onclick="app.state.currentView='notes'; app.render();">برگشت و ذخیره</button>
+                        </div>
+                        <textarea id="editNoteContent" style="flex:1; background:transparent; border:none; resize:none; outline:none; color:var(--text-primary); font-size:1.1rem; line-height:1.6;">${n.content}</textarea>
+                        <div id="autosave-indicator" style="font-size:0.7rem; text-align:right; color:var(--success); opacity:0;">ذخیره شد ✓</div>
+                    </div>
+                `;
+
+                const titleInput = document.getElementById('editNoteTitle');
+                const contentInput = document.getElementById('editNoteContent');
+                
+                const autoSave = () => {
+                    n.title = titleInput.value;
+                    n.content = contentInput.value;
+                    this.save();
+                    const ind = document.getElementById('autosave-indicator');
+                    ind.style.opacity = '1';
+                    setTimeout(() => ind.style.opacity = '0', 2000);
+                };
+
+                titleInput.oninput = autoSave;
+                contentInput.oninput = autoSave;
+            },
+
+            deleteNote(id) {
+                if (confirm('آیا از حذف این یادداشت اطمینان دارید؟')) {
+                    this.state.notes = this.state.notes.filter(n => n.id !== id);
+                    this.save();
+                    this.renderNotesList();
+                }
+            },
+
+            /* ---------- REMINDERS ---------- */
+            addReminder(text, time) {
+                if (!text || !time) {
+                    this.toast('لطفاً متن و زمان یادآور را وارد کنید');
+                    return;
+                }
+                const newReminder = { id: Date.now(), text, time };
+                this.state.reminders.push(newReminder);
+                this.save();
+                this.toast('یادآور اضافه شد');
+                document.getElementById('reminder-text').value = '';
+                document.getElementById('reminder-time').value = '';
+                this.render();
+            },
+
+            deleteReminder(id, confirmDelete = true) {
+                if (confirmDelete && !confirm('آیا یادآور حذف شود؟')) return;
+                this.state.reminders = this.state.reminders.filter(r => r.id !== id);
+                this.save();
+                if (confirmDelete) this.toast('یادآور حذف شد');
+                this.render();
+            },
+
+            /* ---------- GOALS MODULE ---------- */
+            renderGoals(container) {
+                const totalGoals = this.state.goals.length;
+                const completedGoals = this.state.goals.filter(g => (g.current / g.target) >= 1).length;
+                const completionRate = totalGoals ? Math.round((completedGoals / totalGoals) * 100) : 0;
+                
+                container.innerHTML = `
+                    <div class="goals-header">
+                        <h2>🎯 اهداف من</h2>
+                        <div class="goals-stats">
+                            <div class="glass-card" style="padding: 0.5rem 1rem;"><span style="color:var(--primary);">${completedGoals}</span> از ${totalGoals} تکمیل</div>
+                            <div class="glass-card" style="padding: 0.5rem 1rem;">نرخ موفقیت <span style="color:var(--success);">${completionRate}%</span></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap:wrap;">
+                        <input type="text" id="goalTitle" placeholder="عنوان هدف" style="flex:2; min-width:200px; background:var(--input-bg); border:1px solid var(--surface-border); border-radius:10px; padding:0.8rem;">
+                        <select id="goalCategory" style="flex:1; min-width:120px; background:var(--input-bg); border:1px solid var(--surface-border); border-radius:10px; padding:0.8rem;">
+                            <option value="short">کوتاه مدت</option>
+                            <option value="long">بلند مدت</option>
+                            <option value="life">زندگی</option>
+                        </select>
+                        <input type="date" id="goalDueDate" style="flex:1; min-width:140px; background:var(--input-bg); border:1px solid var(--surface-border); border-radius:10px; padding:0.8rem;">
+                        <button class="btn btn-primary" onclick="app.addGoal()">➕ افزودن هدف</button>
+                    </div>
+                    <div id="goals-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;"></div>
+                `;
+                this.renderGoalsList();
+            },
+
+            renderGoalsList() {
+                const list = document.getElementById('goals-list');
+                if (!list) return;
+                if (this.state.goals.length === 0) {
+                    list.innerHTML = '<div class="glass-card" style="text-align:center;">🎯 هنوز هدفی ثبت نکرده‌اید. اولین هدف خود را اضافه کنید!</div>';
+                    return;
+                }
+                list.innerHTML = this.state.goals.map(g => {
+                    const percent = Math.min(100, Math.round((g.current / g.target) * 100));
+                    const isCompleted = percent >= 100;
+                    const dueDate = g.dueDate ? new Date(g.dueDate).toLocaleDateString('fa-IR') : 'بدون تاریخ';
+                    return `
+                        <div class="glass-card goal-card ${isCompleted ? 'completed' : ''}">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h3 style="font-size:1.2rem;">${g.title}</h3>
+                                <span class="goal-tag">${g.category === 'short' ? 'کوتاه مدت' : g.category === 'long' ? 'بلند مدت' : 'زندگی'}</span>
+                            </div>
+                            <div style="margin: 0.5rem 0; color:var(--text-secondary); font-size:0.85rem;">📅 ${dueDate}</div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                <span>پیشرفت: ${g.current} / ${g.target}</span>
+                                <span style="color:${percent >= 100 ? 'var(--success)' : 'var(--primary)'};">${percent}%</span>
+                            </div>
+                            <div class="goal-progress-container">
+                                <div class="goal-progress-fill" style="width: ${percent}%;"></div>
+                            </div>
+
+                            <div class="goal-milestones">
+                                ${g.milestones ? g.milestones.map((m, idx) => `
+                                    <div class="milestone-item">
+                                        <input type="checkbox" class="milestone-checkbox" data-goal="${g.id}" data-index="${idx}" ${m.completed ? 'checked' : ''} onchange="app.toggleMilestone('${g.id}', ${idx})">
+                                        <span style="${m.completed ? 'text-decoration:line-through; opacity:0.6;' : ''}">${m.text}</span>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+
+                            <div class="goal-actions">
+                                <button class="btn" style="padding:0.3rem 0.8rem;" onclick="app.addMilestonePrompt('${g.id}')">➕ زیرهدف</button>
+                                <button class="btn" style="padding:0.3rem 0.8rem; background:var(--primary); color:white;" onclick="app.updateGoalProgress('${g.id}')">📊 بروزرسانی</button>
+                                <button class="btn" style="padding:0.3rem 0.8rem; color:var(--accent);" onclick="app.deleteGoal('${g.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            addGoal() {
+                const title = document.getElementById('goalTitle')?.value.trim();
+                if (!title) { this.toast('عنوان هدف را وارد کنید'); return; }
+                const category = document.getElementById('goalCategory')?.value || 'short';
+                const dueDate = document.getElementById('goalDueDate')?.value || null;
+                const newGoal = {
+                    id: Date.now().toString(),
+                    title,
+                    category,
+                    target: 100,
+                    current: 0,
+                    dueDate,
+                    milestones: [],
+                    createdAt: new Date().toISOString()
+                };
+                this.state.goals.push(newGoal);
+                this.save();
+                this.toast('هدف جدید اضافه شد');
+                this.renderGoals(document.getElementById('app-view'));
+            },
+
+            updateGoalProgress(goalId) {
+                const goal = this.state.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                const newValue = prompt('مقدار جدید پیشرفت را وارد کنید (0 تا 100):', goal.current);
+                if (newValue === null) return;
+                const num = parseInt(newValue);
+                if (isNaN(num) || num < 0 || num > 100) {
+                    this.toast('لطفاً یک عدد بین ۰ تا ۱۰۰ وارد کنید');
+                    return;
+                }
+                goal.current = num;
+                this.save();
+                this.renderGoalsList();
+                if (num >= goal.target) {
+                    this.toast(`🎉 هدف "${goal.title}" تکمیل شد!`, 'success');
+                    this.playAlarm();
+                }
+            },
+
+            addMilestonePrompt(goalId) {
+                const goal = this.state.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                const text = prompt('متن زیرهدف را وارد کنید:');
+                if (!text) return;
+                if (!goal.milestones) goal.milestones = [];
+                goal.milestones.push({ text, completed: false });
+                this.save();
+                this.renderGoalsList();
+            },
+
+            toggleMilestone(goalId, index) {
+                const goal = this.state.goals.find(g => g.id === goalId);
+                if (goal && goal.milestones && goal.milestones[index]) {
+                    goal.milestones[index].completed = !goal.milestones[index].completed;
+                    this.save();
+                    const allCompleted = goal.milestones.every(m => m.completed);
+                    if (allCompleted && goal.current < goal.target) {
+                        goal.current = goal.target;
+                        this.toast(`🎯 تمام زیرهدف‌های "${goal.title}" کامل شد!`, 'success');
+                    }
+                    this.renderGoalsList();
+                }
+            },
+
+            deleteGoal(id) {
+                if (confirm('آیا از حذف این هدف اطمینان دارید؟')) {
+                    this.state.goals = this.state.goals.filter(g => g.id !== id);
+                    this.save();
+                    this.renderGoals(document.getElementById('app-view'));
+                }
+            },
+
+            /* ---------- ENHANCED FOCUS MODULE ---------- */
+            renderFocus(container) {
+                const totalToday = this.totalFocusToday();
+                const totalSessions = this.state.focusSessions.length;
+                const avgDuration = totalSessions ? Math.round(this.state.focusSessions.reduce((a, s) => a + s.duration, 0) / totalSessions / 60) : 0;
+                const recentSessions = this.state.focusSessions.slice(-5).reverse();
+
+                const progressPercent = ((this.timer.totalSeconds - this.timer.timeLeft) / this.timer.totalSeconds) * 100;
+                const currentMinutes = Math.floor(this.timer.totalSeconds / 60);
+                const isPomodoro = currentMinutes === 25;
+                const isLong = currentMinutes === 50;
+                const isBreak = currentMinutes === 5;
+
+                container.innerHTML = `
+                    <div class="focus-container">
+                        <h2 style="margin-bottom: 1rem;">🧘 تمرکز عمیق</h2>
+                        <div class="glass-card">
+                            <div class="xp-badge">✨ سطح تمرکز: ${this.state.xp} XP</div>
+
+                            <div class="focus-presets">
+                                <button class="preset-btn ${isPomodoro ? 'active' : ''}" onclick="app.setFocusTime(25)">پومودورو</button>
+                                <button class="preset-btn ${isLong ? 'active' : ''}" onclick="app.setFocusTime(50)">تمرکز طولانی</button>
+                                <button class="preset-btn ${isBreak ? 'active' : ''}" onclick="app.setFocusTime(5)">استراحت</button>
+                            </div>
+
+                            <div class="timer-display ${this.timer.running ? 'timer-running' : ''}" id="focusTimerDisplay">
+                                ${this.formatTime(this.timer.timeLeft)}
+                            </div>
+                            <div class="timer-progress">
+                                <div class="timer-progress-fill" id="focusProgressFill" style="width: ${progressPercent}%;"></div>
+                            </div>
+
+                            <div class="focus-options">
+                                <select id="ambient-sound" class="btn" style="background: var(--surface);" onchange="app.toggleSound(this.value)">
+                                    <option value="none">🔇 بدون صدا</option>
+                                    <option value="rain">🌧️ صدای باران</option>
+                                    <option value="white-noise">🌫️ نویز سفید</option>
+                                </select>
+                            </div>
+
+                            <div class="timer-controls">
+                                <button class="btn btn-primary" id="startTimerBtn">${this.timer.running ? '⏸️ توقف' : '▶️ شروع'}</button>
+                                <button class="btn" id="pauseTimerBtn">⏸️ توقف موقت</button>
+                                <button class="btn" id="resetTimerBtn">🔄 ریست</button>
+                            </div>
+                        </div>
+
+                        <div class="session-stats">
+                            <div class="session-card">
+                                <div class="session-value" id="todayFocusValue">${Math.round(totalToday)}</div>
+                                <div class="session-label">دقیقه امروز</div>
+                            </div>
+                            <div class="session-card">
+                                <div class="session-value" id="totalSessionsValue">${totalSessions}</div>
+                                <div class="session-label">جلسات کل</div>
+                            </div>
+                            <div class="session-card">
+                                <div class="session-value" id="avgDurationValue">${avgDuration}</div>
+                                <div class="session-label">میانگین (دقیقه)</div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card">
+                            <h3>📋 آخرین جلسات</h3>
+                            <div class="session-list" id="sessionList">
+                                ${recentSessions.map(s => `
+                                    <div class="session-item">
+                                        <span>${new Date(s.date).toLocaleDateString('fa-IR')} - ${new Date(s.date).toLocaleTimeString('fa-IR')}</span>
+                                        <span style="color:var(--primary); font-weight:600;">${Math.round(s.duration/60)} دقیقه</span>
+                                    </div>
+                                `).join('')}
+                                ${recentSessions.length === 0 ? '<p style="text-align:center; color:var(--text-secondary);">هنوز جلسه‌ای ثبت نشده</p>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <audio id="ambient-audio" loop></audio>
+                `;
+
+                // Event listeners
+                document.getElementById('startTimerBtn').onclick = () => {
+                    if (this.timer.running) this.pauseTimer();
+                    else this.startTimer();
+                    this.renderFocus(container);
+                };
+                document.getElementById('pauseTimerBtn').onclick = () => this.pauseTimer();
+                document.getElementById('resetTimerBtn').onclick = () => this.resetTimer();
+            },
+
+            // Set focus time preset (in minutes)
+            setFocusTime(minutes) {
+                this.pauseTimer(); // stop if running
+                this.timer.totalSeconds = minutes * 60;
+                this.timer.timeLeft = this.timer.totalSeconds;
+                this.updateTimerDisplay();
+                // re-render to update active class
+                if (this.state.currentView === 'focus') {
+                    this.renderFocus(document.getElementById('app-view'));
+                }
+            },
+
+            // Toggle ambient sound
+            toggleSound(type) {
+                const audio = document.getElementById('ambient-audio');
+                if (!audio) return;
+                const sounds = {
+                    'rain': 'https://www.soundjay.com/nature/rain-01.mp3',
+                    'white-noise': 'https://www.soundjay.com/misc/sounds/white-noise-01.mp3'
+                };
+                
+                if (type === 'none' || !sounds[type]) {
+                    audio.pause();
+                    audio.src = '';
+                } else {
+                    audio.src = sounds[type];
+                    audio.play().catch(e => console.log("نیاز به تعامل کاربر برای پخش صدا", e));
+                }
+            },
+
+            // توابع کمکی تایمر
+            startTimer() {
+                if (this.timer.running) return;
+                this.timer.running = true;
+                this.timer.interval = setInterval(() => {
+                    if (this.timer.timeLeft > 0) {
+                        this.timer.timeLeft--;
+                        this.updateTimerDisplay();
+                    } else {
+                        this.completeTimer();
+                    }
+                }, 1000);
+                this.updateTimerDisplay();
+            },
+
+            pauseTimer() {
+                this.timer.running = false;
+                if (this.timer.interval) {
+                    clearInterval(this.timer.interval);
+                    this.timer.interval = null;
+                }
+                this.updateTimerDisplay();
+            },
+
+            resetTimer() {
+                this.pauseTimer();
+                this.timer.timeLeft = this.timer.totalSeconds;
+                this.updateTimerDisplay();
+            },
+
+            completeTimer() {
+                this.pauseTimer();
+                const duration = this.timer.totalSeconds - this.timer.timeLeft; // in seconds
+                const session = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    duration: duration
+                };
+                this.state.focusSessions.push(session);
+                this.state.focusTime += Math.round(duration / 60);
+                
+                // Award XP
+                this.state.xp += 10;
+                this.save();
+                
+                this.toast('🎉 زمان تمرکز به پایان رسید! ۱۰ XP دریافت کردید', 'success');
+                this.playAlarm();
+                this.resetTimer();
+                if (this.state.currentView === 'focus') {
+                    this.render(); // re-render focus page
+                }
+            },
+
+            updateTimerDisplay() {
+                const display = document.getElementById('focusTimerDisplay');
+                const progress = document.getElementById('focusProgressFill');
+                if (display) display.innerText = this.formatTime(this.timer.timeLeft);
+                if (progress) {
+                    const percent = ((this.timer.totalSeconds - this.timer.timeLeft) / this.timer.totalSeconds) * 100;
+                    progress.style.width = `${percent}%`;
+                }
+            },
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            },
+
+            totalFocusToday() {
+                const today = new Date().toDateString();
+                return this.state.focusSessions
+                    .filter(s => new Date(s.date).toDateString() === today)
+                    .reduce((acc, s) => acc + s.duration, 0) / 60;
+            },
+
+            /* ---------- STATS MODULE (CHART.JS) ---------- */
+            renderStats(container) {
+                container.innerHTML = `
+                    <h2>تحلیل آماری</h2>
+                    <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-top: 2rem;">
+                        <div class="glass-card">
+                            <h3>وضعیت وظایف</h3>
+                            <canvas id="tasksChart"></canvas>
+                        </div>
+                        <div class="glass-card">
+                            <h3>پایداری عادات</h3>
+                            <canvas id="habitsChart"></canvas>
+                        </div>
+                        <div class="glass-card" style="grid-column: span 2;">
+                            <h3>زمان تمرکز (۷ روز اخیر)</h3>
+                            <canvas id="focusLineChart"></canvas>
+                        </div>
+                    </div>
+                `;
+                this.initStatsCharts();
+            },
+
+            initStatsCharts() {
+                const ctxTasks = document.getElementById('tasksChart').getContext('2d');
+                const done = this.state.tasks.filter(t => t.completed).length;
+                const pending = this.state.tasks.length - done;
+
+                new Chart(ctxTasks, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['انجام شده', 'مانده'],
+                        datasets: [{
+                            data: [done || 1, pending],
+                            backgroundColor: ['#10b981', '#6366f1']
+                        }]
+                    },
+                    options: { plugins: { legend: { position: 'bottom' } } }
+                });
+
+                const ctxFocus = document.getElementById('focusLineChart').getContext('2d');
+                const last7Days = [];
+                const labels = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const dateStr = d.toDateString();
+                    labels.push(d.toLocaleDateString('fa-IR', { weekday: 'short' }));
+                    const total = this.state.focusSessions
+                        .filter(s => new Date(s.date).toDateString() === dateStr)
+                        .reduce((acc, s) => acc + s.duration, 0) / 60;
+                    last7Days.push(total);
+                }
+
+                new Chart(ctxFocus, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'دقیقه تمرکز',
+                            data: last7Days,
+                            borderColor: '#6366f1',
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)'
+                        }]
+                    }
+                });
+            },
+
+            /* ---------- CORE UTILITIES ---------- */
+            addTask(title) {
+                if(!title) return;
+                this.state.tasks.push({ id: Date.now(), title, completed: false, priority: 'medium' });
+                this.save();
+                this.render();
+                this.toast('وظیفه با موفقیت اضافه شد');
+            },
+
+            toggleTask(id) {
+                const t = this.state.tasks.find(t => t.id === id);
+                if(t) t.completed = !t.completed;
+                this.save();
+                this.render();
+            },
+
+            deleteTask(id) {
+                if (confirm('آیا از حذف این وظیفه اطمینان دارید؟')) {
+                    this.state.tasks = this.state.tasks.filter(t => t.id !== id);
+                    this.save();
+                    this.render();
+                }
+            },
+
+            calculateProductivityScore() {
+                if (this.state.tasks.length === 0) return 0;
+                const taskRatio = (this.state.tasks.filter(t => t.completed).length / this.state.tasks.length) * 100;
+                return Math.round(taskRatio);
+            },
+
+            animateValue(id, start, end, duration) {
+                const obj = document.getElementById(id);
+                if (!obj) return;
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = Math.floor(progress * (end - start) + start);
+                    if (progress < 1) window.requestAnimationFrame(step);
+                };
+                window.requestAnimationFrame(step);
+            },
+
+            toggleTheme() {
+                const body = document.body;
+                const isDark = body.getAttribute('data-theme') === 'dark';
+                body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            },
+
+            toast(msg, type = '') {
+                const t = document.createElement('div');
+                t.style.cssText = `position:fixed; bottom:20px; left:20px; background:${type === 'success' ? 'var(--success)' : 'var(--primary)'}; color:white; padding:12px 24px; border-radius:10px; z-index:9999; animation:fadeIn 0.3s ease;`;
+                t.innerText = msg;
+                document.body.appendChild(t);
+                setTimeout(() => t.remove(), 3000);
+            },
+
+            startClock() {
+                setInterval(() => {
+                    const el = document.getElementById('clock');
+                    if(el) el.innerText = new Date().toLocaleTimeString('fa-IR');
+                }, 1000);
+            },
+
+            startReminderChecker() {
+                if (this.alarmInterval) clearInterval(this.alarmInterval);
+                this.alarmInterval = setInterval(() => {
+                    this.checkReminders();
+                }, 60000);
+            },
+
+            checkReminders() {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+
+                this.state.reminders.forEach(rem => {
+                    const [hour, minute] = rem.time.split(':').map(Number);
+                    if (hour === currentHour && minute === currentMinute) {
+                        this.playAlarm();
+                        this.toast(`🔔 یادآور: ${rem.text}`, 'success');
+                        this.sendTelegramMessage(rem.text); 
+                        this.deleteReminder(rem.id, false);
+                    }
+                });
+            },
+
+            sendTelegramMessage(text) {
+                const botToken = '8348342500:AAGbQWfr4LhvB3HZRWFZjv_GIVlMXAhnDIw';
+                const chatId = '832244920';
+                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: `🔔 یادآور از ZENITH OS:\n\n${text}` })
+                }).catch(err => console.error('Telegram Error:', err));
+            },
+
+            playAlarm() {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                } catch (e) {
+                    console.warn('Web Audio not supported', e);
+                }
+            },
+
+            attachEvents() {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.onclick = (e) => {
+                        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        this.state.currentView = e.currentTarget.dataset.view;
+                        this.render();
+                    };
+                });
+
+                window.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                        e.preventDefault();
+                        document.getElementById('cmd-palette').classList.add('open');
+                        document.getElementById('cp-input').focus();
+                    }
+                    if (e.key === 'Escape') {
+                        document.getElementById('cmd-palette').classList.remove('open');
+                    }
+                });
+
+                document.getElementById('cp-input').onkeypress = (e) => {
+                    if(e.key === 'Enter') {
+                        const cmd = e.target.value;
+                        if(cmd.startsWith('افزودن ')) {
+                            this.addTask(cmd.replace('افزودن ', ''));
+                        }
+                        e.target.value = '';
+                        document.getElementById('cmd-palette').classList.remove('open');
+                    }
+                };
+            }
+        };
+
+        // Expose app globally for inline event handlers
+        window.app = app;
+
+        // Start the app
+        app.init();
+    </script>
+</body>
+</html>
