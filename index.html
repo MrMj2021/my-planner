@@ -279,7 +279,7 @@ body {
   .weekly-table {
     min-width: 600px;
   }
-  .cell-input {
+  .cell-content {
     font-size: 0.7rem;
     padding: 2px;
   }
@@ -424,7 +424,7 @@ body {
   margin-top: 1.5rem;
 }
 
-/* ---------- CALENDAR STYLES (fixed) ---------- */
+/* ---------- CALENDAR STYLES ---------- */
 .calendar-container {
   width: 100%;
   text-align: center;
@@ -555,103 +555,117 @@ body {
   font-size: 0.8rem;
 }
 
+/* ---------- NOTES MODULE (ENHANCED) ---------- */
 .note-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
+  margin-top: 1rem;
 }
 .note-card {
-  height: 200px;
+  height: 250px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: 0.3s;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 .note-card:hover {
   transform: translateY(-5px);
 }
-
-/* ---------- GOALS MODULE ---------- */
-.goals-header {
+.note-card .note-color-bar {
+  height: 8px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.note-card .note-title {
+  font-weight: 700;
+  margin: 15px 10px 5px 10px;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-card .note-content-preview {
+  flex: 1;
+  margin: 0 10px 10px 10px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+.note-card .note-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  padding: 8px 10px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
 }
-.goals-stats {
-  display: flex;
-  gap: 1.5rem;
-}
-.goal-card {
-  background: var(--glass);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  transition: 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.goal-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
-}
-.goal-card.completed::after {
-  content: "🎉";
-  font-size: 3rem;
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  opacity: 0.3;
-  animation: celebrate 0.5s ease infinite alternate;
-}
-@keyframes celebrate {
-  from { transform: scale(0.8); }
-  to { transform: scale(1.2); }
-}
-.goal-progress-container {
-  height: 10px;
-  background: var(--glass-border);
-  border-radius: 20px;
-  margin: 1rem 0;
-  overflow: hidden;
-}
-.goal-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
-  width: 0%;
-  transition: width 0.5s ease;
-  border-radius: 20px;
-}
-.goal-milestones {
-  margin-top: 1rem;
-}
-.milestone-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  font-size: 0.9rem;
-}
-.milestone-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-.goal-actions {
+.note-actions {
   display: flex;
   gap: 5px;
-  margin-top: 1rem;
-  justify-content: flex-end;
 }
-.goal-tag {
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 20px;
-  background: var(--primary-light);
-  color: white;
-  display: inline-block;
+.note-actions button {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+.note-editor {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.note-editor-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.note-editor-toolbar input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.note-editor-toolbar select {
+  padding: 5px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+.note-editor-title {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  outline: none;
+  width: 70%;
+  min-width: 200px;
+  margin-bottom: 10px;
+}
+.note-editor-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  resize: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  width: 100%;
 }
 
 /* ---------- FOCUS MODULE ---------- */
@@ -769,7 +783,35 @@ body {
   display: inline-block;
 }
 
-/* ---------- WEEKLY SHEET STYLES ---------- */
+/* ---------- WEEKLY SHEET STYLES (ENHANCED) ---------- */
+.weekly-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(99,102,241,0.05);
+  border-radius: var(--radius-md);
+  align-items: center;
+}
+.weekly-toolbar select, .weekly-toolbar input, .weekly-toolbar button {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+.weekly-toolbar button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.weekly-toolbar button:hover {
+  background: var(--primary-dark);
+}
+
 .sheet-outer-container {
   overflow-x: auto;
   background: var(--glass);
@@ -777,7 +819,7 @@ body {
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .weekly-table {
@@ -813,21 +855,36 @@ body {
   text-align: center;
 }
 
-.cell-input {
-  width: 100%;
+.cell-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   height: 100%;
+}
+.cell-input {
+  width: 70%;
   border: none;
   outline: none;
   background: transparent;
   text-align: center;
   font-size: 0.85rem;
   transition: 0.2s;
+  padding: 2px;
 }
-
 .cell-input:focus {
   background: rgba(99, 102, 241, 0.1);
-  box-shadow: inset 0 0 0 2px var(--primary);
-  border-radius: 8px;
+  border-radius: 4px;
+}
+.cell-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+.cell-completed .cell-input {
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
 /* ---------- ASSISTANT ---------- */
@@ -1081,6 +1138,10 @@ body {
                 <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
                 <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
                 <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
+                <!-- دکمه‌های Export/Import با id مجزا -->
+                <div class="nav-item" id="exportBtn"><span>📤</span> خروجی</div>
+                <div class="nav-item" id="importBtn"><span>📥</span> ورودی</div>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
             </nav>
             <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--surface-border);">
                 <button class="btn btn-primary" style="width: 100%;" onclick="app.toggleTheme()">🌓 تغییر تم</button>
@@ -1105,6 +1166,8 @@ body {
                 <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
                 <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
                 <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
+                <div class="nav-item" id="mobileExportBtn"><span>📤</span> خروجی</div>
+                <div class="nav-item" id="mobileImportBtn"><span>📥</span> ورودی</div>
             </nav>
             <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--surface-border);">
                 <button class="btn btn-primary" style="width: 100%;" onclick="app.toggleTheme()">🌓 تغییر تم</button>
@@ -1179,7 +1242,8 @@ body {
                 timeLeft: 25 * 60, 
                 interval: null, 
                 running: false,
-                sessionStart: null
+                startTime: null,
+                remainingOnStart: null
             },
             alarmInterval: null,
             isInitialLoad: false,
@@ -1236,6 +1300,27 @@ body {
                         }
                     });
                 });
+
+                // بازیابی تایمر در حال اجرا
+                const savedTimer = localStorage.getItem('zenith_timer_start');
+                if (savedTimer) {
+                    try {
+                        const { startTime, remaining, total } = JSON.parse(savedTimer);
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        const newTimeLeft = Math.max(0, remaining - elapsed);
+                        this.timer.timeLeft = newTimeLeft;
+                        this.timer.totalSeconds = total;
+                        if (newTimeLeft > 0) {
+                            this.timer.running = true;
+                            this.startTimer(); // دوباره شروع می‌کند
+                        } else {
+                            localStorage.removeItem('zenith_timer_start');
+                            this.completeTimer();
+                        }
+                    } catch (e) {
+                        console.warn('Error restoring timer', e);
+                    }
+                }
             },
 
             toggleDrawer() {
@@ -1294,15 +1379,54 @@ body {
                 }
             },
 
-            /* ---------- DASHBOARD (ENHANCED) ---------- */
+            /* ---------- EXPORT/IMPORT ---------- */
+            exportData() {
+                const dataToExport = { ...this.state };
+                delete dataToExport.currentView;
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `zenith_backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.toast('✅ پشتیبان با موفقیت دریافت شد');
+            },
+
+            importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                if (!confirm('آیا از وارد کردن این فایل اطمینان دارید؟ داده‌های فعلی با داده‌های فایل جایگزین خواهند شد.')) {
+                    document.getElementById('importFile').value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        delete imported.currentView;
+                        this.state = { ...this.state, ...imported };
+                        this.save();
+                        this.render();
+                        this.toast('✅ داده‌ها با موفقیت وارد شدند');
+                    } catch (err) {
+                        this.toast('❌ خطا در خواندن فایل');
+                        console.error(err);
+                    }
+                    document.getElementById('importFile').value = '';
+                };
+                reader.readAsText(file);
+            },
+
+            /* ---------- DASHBOARD ---------- */
             renderDashboard(container) {
                 const completedTasks = this.state.tasks.filter(t => t.completed).length;
                 const prodScore = this.calculateProductivityScore();
-                
-                // Generate calendar HTML (fixed version)
                 const calendarHTML = this.generateCalendarFixed();
 
-                // Generate mini habits list (max 3)
                 const miniHabits = this.state.habits.slice(0, 3);
                 const habitsHTML = miniHabits.map(h => `
                     <div class="habit-mini-item">
@@ -1345,9 +1469,7 @@ body {
                     </div>
 
                     <div class="dashboard-grid">
-                        <!-- ستون راست -->
                         <div>
-                            <!-- کارت وظایف سریع -->
                             <div class="glass-card">
                                 <h3>وظایف سریع</h3>
                                 <div style="display:flex; gap:10px; margin: 15px 0; flex-wrap:wrap;">
@@ -1357,7 +1479,6 @@ body {
                                 <div id="dashboard-tasks"></div>
                             </div>
 
-                            <!-- کارت عادات (خلاصه) -->
                             <div class="glass-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <h3>🔥 عادات امروز</h3>
@@ -1369,15 +1490,12 @@ body {
                             </div>
                         </div>
 
-                        <!-- ستون چپ -->
                         <div>
-                            <!-- کارت تقویم (اصلاح شده) -->
                             <div class="glass-card">
                                 <h3>📅 تقویم</h3>
                                 ${calendarHTML}
                             </div>
 
-                            <!-- کارت نقل قول -->
                             <div class="glass-card">
                                 <h3>نقل قول روز</h3>
                                 <p style="font-style:italic; margin-top:15px; color:var(--text-secondary);">"بهترین راه برای پیش‌بینی آینده، ساختن آن است."</p>
@@ -1385,7 +1503,6 @@ body {
                         </div>
                     </div>
 
-                    <!-- کارت یادآورها -->
                     <div class="glass-card" style="margin-top: 1.5rem;">
                         <h3>⏰ یادآورهای امروز</h3>
                         <div style="margin-top: 15px;">
@@ -1417,7 +1534,6 @@ body {
                 this.renderMiniTasks();
             },
 
-            // تولید تقویم ماه جاری با طراحی درست (بدون باگ)
             generateCalendarFixed() {
                 const now = new Date();
                 const year = now.getFullYear();
@@ -1425,18 +1541,10 @@ body {
                 const today = now.getDate();
 
                 const firstDay = new Date(year, month, 1);
-                // محاسبه offset: چند روز قبل از اول ماه باید خالی باشد تا روز اول در ستون درست قرار گیرد
-                // getDay(): 0 یکشنبه, 1 دوشنبه, ..., 6 شنبه
-                // در نمایش ما شنبه اولین روز هفته است (ستون اول). پس offset = (firstDay.getDay() + 6) % 7
-                // اگر firstDay.getDay() = 6 (شنبه) => offset = (6+6)%7 = 12%7 = 5 (اشتباه است!)
-                // در واقع شنبه باید offset=0 داشته باشد. پس فرمول: offset = (firstDay.getDay() + 6) % 7
-                // test: یکشنبه (0) => (0+6)%7=6 (جمعه) --> درست؟ اگر یکشنبه اول ماه باشد، باید 1 روز قبل از آن خالی باشد (شنبه)؟ نه، یکشنبه روز دوم هفته است (بعد از شنبه). پس offset باید 1 باشد. (یکشنبه = 1) پس فرمول اشتباه است.
-                // درست: offset = firstDay.getDay() === 6 ? 0 : firstDay.getDay() + 1; // شنبه (6) -> 0, یکشنبه (0) -> 1, دوشنبه (1) -> 2, ...
-                let offset = firstDay.getDay(); // 0 یکشنبه, 1 دوشنبه, ..., 6 شنبه
-                offset = offset === 6 ? 0 : offset + 1; // شنبه 6 => 0, یکشنبه 0 => 1, دوشنبه 1 => 2, ... جمعه 5 => 6
+                let offset = firstDay.getDay();
+                offset = offset === 6 ? 0 : offset + 1;
 
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
-
                 const monthNames = ['ژانویه', 'فوریه', 'مارس', 'آوریل', 'مه', 'ژوئن', 'ژوئیه', 'اوت', 'سپتامبر', 'اکتبر', 'نوامبر', 'دسامبر'];
                 const weekdayNames = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 
@@ -1450,18 +1558,15 @@ body {
                     <div class="calendar-days">
                 `;
 
-                // سلول‌های خالی قبل از اول ماه
                 for (let i = 0; i < offset; i++) {
                     html += `<div class="calendar-day other-month"></div>`;
                 }
 
-                // روزهای ماه
                 for (let d = 1; d <= daysInMonth; d++) {
                     const isToday = (d === today) ? 'today' : '';
                     html += `<div class="calendar-day ${isToday}">${d}</div>`;
                 }
 
-                // سلول‌های خالی بعد از آخر ماه (تا 42 سلول پر شود)
                 const totalCells = Math.ceil((offset + daysInMonth) / 7) * 7;
                 for (let i = offset + daysInMonth; i < totalCells; i++) {
                     html += `<div class="calendar-day other-month"></div>`;
@@ -1581,7 +1686,6 @@ body {
                         h.streak--;
                     }
                     this.save();
-                    // اگر در داشبورد هستیم، فقط همان بخش را آپدیت کنیم؟ اما برای سادگی، کل صفحه را رندر می‌کنیم
                     this.render();
                 }
             },
@@ -1594,11 +1698,11 @@ body {
                 }
             },
 
-            /* ---------- NOTES MODULE ---------- */
+            /* ---------- NOTES MODULE (ENHANCED) - بدون autosave مزاحم ---------- */
             renderNotes(container) {
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; flex-wrap:wrap; gap:1rem;">
-                        <h2>دفترچه یادداشت</h2>
+                        <h2>📝 دفترچه یادداشت</h2>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             <input type="text" id="noteSearch" class="cp-input" style="width:200px; border:1px solid var(--surface-border); border-radius:10px; padding:5px 15px;" placeholder="جستجو...">
                             <button class="btn btn-primary" onclick="app.addNote()">+ یادداشت جدید</button>
@@ -1614,53 +1718,116 @@ body {
                 const grid = document.getElementById('notes-grid');
                 const filtered = this.state.notes.filter(n => n.title.includes(filter) || n.content.includes(filter));
                 
-                grid.innerHTML = filtered.map(n => `
-                    <div class="glass-card note-card fade-in" onclick="app.editNote(${n.id})">
-                        <h3 style="margin-bottom:10px;">${n.title}</h3>
-                        <p style="font-size:0.85rem; color:var(--text-secondary); flex:1; overflow:hidden;">${n.content.substring(0, 100)}...</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top:1px solid var(--surface-border); pt:10px;">
-                            <span style="font-size:0.7rem;">${n.date}</span>
-                            <button class="btn" style="color:var(--accent); padding:2px;" onclick="event.stopPropagation(); app.deleteNote(${n.id})">🗑️</button>
+                grid.innerHTML = filtered.map(n => {
+                    const bgColor = n.bgColor || 'var(--glass)';
+                    const textColor = n.textColor || 'inherit';
+                    return `
+                    <div class="glass-card note-card fade-in" style="background: ${bgColor}; color: ${textColor};" onclick="app.editNote(${n.id})">
+                        <div class="note-color-bar" style="background: ${n.color || 'transparent'};"></div>
+                        <div class="note-title">${n.title}</div>
+                        <div class="note-content-preview">${n.content}</div>
+                        <div class="note-footer">
+                            <span>${n.date}</span>
+                            <div class="note-actions">
+                                <button class="btn btn-secondary" style="padding:2px 6px;" onclick="event.stopPropagation(); app.duplicateNote(${n.id})">📋</button>
+                                <button class="btn" style="color:var(--accent); padding:2px 6px;" onclick="event.stopPropagation(); app.deleteNote(${n.id})">🗑️</button>
+                            </div>
                         </div>
                     </div>
-                `).join('') || '<p style="grid-column:1/-1; text-align:center;">یادداشتی یافت نشد</p>';
+                `}).join('') || '<p style="grid-column:1/-1; text-align:center;">یادداشتی یافت نشد</p>';
             },
 
             addNote() {
-                const newNote = { id: Date.now(), title: 'بدون عنوان', content: '', date: new Date().toLocaleDateString('fa-IR') };
+                const newNote = { 
+                    id: Date.now(), 
+                    title: 'بدون عنوان', 
+                    content: '', 
+                    date: new Date().toLocaleDateString('fa-IR'),
+                    bgColor: 'var(--glass)',
+                    textColor: 'var(--text-primary)',
+                    color: 'transparent'
+                };
                 this.state.notes.push(newNote);
                 this.save();
                 this.editNote(newNote.id);
+            },
+
+            duplicateNote(id) {
+                const note = this.state.notes.find(n => n.id === id);
+                if (!note) return;
+                const newNote = { 
+                    ...note, 
+                    id: Date.now(), 
+                    title: note.title + ' (کپی)',
+                    date: new Date().toLocaleDateString('fa-IR')
+                };
+                this.state.notes.push(newNote);
+                this.save();
+                this.renderNotesList();
+                this.toast('یادداشت کپی شد');
             },
 
             editNote(id) {
                 const n = this.state.notes.find(n => n.id === id);
                 const view = document.getElementById('app-view');
                 view.innerHTML = `
-                    <div class="glass-card fade-in" style="height: 80vh; display:flex; flex-direction:column;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; mb:1rem; flex-wrap:wrap;">
-                            <input type="text" id="editNoteTitle" value="${n.title}" style="background:transparent; border:none; font-size:1.5rem; font-weight:700; color:var(--text-primary); outline:none; width:70%; min-width:200px;">
-                            <button class="btn btn-primary" onclick="app.state.currentView='notes'; app.render();">برگشت و ذخیره</button>
+                    <div class="glass-card fade-in note-editor">
+                        <div class="note-editor-toolbar">
+                            <input type="color" id="noteBgColor" value="${n.bgColor || '#ffffff'}" title="رنگ پس‌زمینه">
+                            <input type="color" id="noteTextColor" value="${n.textColor || '#000000'}" title="رنگ متن">
+                            <select id="noteFontSize">
+                                <option value="0.9rem">کوچک</option>
+                                <option value="1rem" selected>معمولی</option>
+                                <option value="1.2rem">بزرگ</option>
+                                <option value="1.5rem">خیلی بزرگ</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="app.saveNoteFromEditor(${n.id})">💾 ذخیره</button>
+                            <button class="btn btn-primary" onclick="app.saveAndExitNote(${n.id})">بازگشت</button>
                         </div>
-                        <textarea id="editNoteContent" style="flex:1; background:transparent; border:none; resize:none; outline:none; color:var(--text-primary); font-size:1.1rem; line-height:1.6;">${n.content}</textarea>
-                        <div id="autosave-indicator" style="font-size:0.7rem; text-align:right; color:var(--success); opacity:0;">ذخیره شد ✓</div>
+                        <input type="text" id="editNoteTitle" class="note-editor-title" value="${n.title.replace(/"/g, '&quot;')}" placeholder="عنوان">
+                        <textarea id="editNoteContent" class="note-editor-textarea" placeholder="متن یادداشت...">${n.content}</textarea>
+                        <div id="autosave-indicator" style="font-size:0.7rem; text-align:left; color:var(--success); opacity:0;">ذخیره شد ✓</div>
                     </div>
                 `;
 
                 const titleInput = document.getElementById('editNoteTitle');
                 const contentInput = document.getElementById('editNoteContent');
+                const bgColorInput = document.getElementById('noteBgColor');
+                const textColorInput = document.getElementById('noteTextColor');
+                const fontSizeSelect = document.getElementById('noteFontSize');
                 
-                const autoSave = () => {
+                // فقط state محلی را به‌روز می‌کند، بدون ذخیره در Firebase (برای جلوگیری از رندر مجدد)
+                const updateLocalState = () => {
                     n.title = titleInput.value;
                     n.content = contentInput.value;
-                    this.save();
+                    n.bgColor = bgColorInput.value;
+                    n.textColor = textColorInput.value;
+                    n.fontSize = fontSizeSelect.value;
+                    // ایندیکیتور موقت
                     const ind = document.getElementById('autosave-indicator');
                     ind.style.opacity = '1';
-                    setTimeout(() => ind.style.opacity = '0', 2000);
+                    setTimeout(() => ind.style.opacity = '0', 1000);
                 };
 
-                titleInput.oninput = autoSave;
-                contentInput.oninput = autoSave;
+                titleInput.oninput = updateLocalState;
+                contentInput.oninput = updateLocalState;
+                bgColorInput.oninput = updateLocalState;
+                textColorInput.oninput = updateLocalState;
+                fontSizeSelect.onchange = updateLocalState;
+            },
+
+            saveNoteFromEditor(id) {
+                const n = this.state.notes.find(n => n.id === id);
+                if (!n) return;
+                // اطمینان از اینکه آخرین تغییرات در state هست (قبلاً updateLocalState انجام شده)
+                this.save();
+                this.toast('ذخیره شد');
+            },
+
+            saveAndExitNote(id) {
+                this.saveNoteFromEditor(id);
+                this.state.currentView = 'notes';
+                this.render();
             },
 
             deleteNote(id) {
@@ -1841,7 +2008,7 @@ body {
                 }
             },
 
-            /* ---------- ENHANCED FOCUS MODULE ---------- */
+            /* ---------- ENHANCED FOCUS MODULE با پشتیبانی از پس‌زمینه ---------- */
             renderFocus(container) {
                 const totalToday = this.totalFocusToday();
                 const totalSessions = this.state.focusSessions.length;
@@ -1958,6 +2125,14 @@ body {
             startTimer() {
                 if (this.timer.running) return;
                 this.timer.running = true;
+                this.timer.startTime = Date.now();
+                this.timer.remainingOnStart = this.timer.timeLeft;
+                localStorage.setItem('zenith_timer_start', JSON.stringify({
+                    startTime: this.timer.startTime,
+                    remaining: this.timer.timeLeft,
+                    total: this.timer.totalSeconds
+                }));
+
                 this.timer.interval = setInterval(() => {
                     if (this.timer.timeLeft > 0) {
                         this.timer.timeLeft--;
@@ -1975,6 +2150,11 @@ body {
                     clearInterval(this.timer.interval);
                     this.timer.interval = null;
                 }
+                localStorage.setItem('zenith_timer_start', JSON.stringify({
+                    startTime: Date.now(),
+                    remaining: this.timer.timeLeft,
+                    total: this.timer.totalSeconds
+                }));
                 this.updateTimerDisplay();
             },
 
@@ -1982,6 +2162,7 @@ body {
                 this.pauseTimer();
                 this.timer.timeLeft = this.timer.totalSeconds;
                 this.updateTimerDisplay();
+                localStorage.removeItem('zenith_timer_start');
             },
 
             completeTimer() {
@@ -2027,7 +2208,7 @@ body {
                     .reduce((acc, s) => acc + s.duration, 0) / 60;
             },
 
-            /* ---------- STATS MODULE (بدون دکمه بازگشت) ---------- */
+            /* ---------- STATS MODULE ---------- */
             renderStats(container) {
                 container.innerHTML = `
                     <h2>تحلیل آماری</h2>
@@ -2096,7 +2277,7 @@ body {
                 });
             },
 
-            /* ---------- WEEKLY PLANNER با دکمه بازگشت ---------- */
+            /* ---------- ENHANCED WEEKLY PLANNER با قابلیت تیک و عملیات گروهی ---------- */
             renderWeekly(container) {
                 const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
                 const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
@@ -2110,7 +2291,26 @@ body {
                             <h2 style="margin:0;">📅 برنامه ریزی هفتگی (۲۴ ساعته)</h2>
                             <div style="width:70px;"></div>
                         </div>
-                        <p style="font-size:0.8rem; color:gray; margin-bottom:10px;">نکته: متن را بنویسید و خارج شوید تا ذخیره شود.</p>
+
+                        <!-- نوار ابزار عملیات گروهی -->
+                        <div class="weekly-toolbar">
+                            <select id="bulkDaySelect">
+                                <option value="">انتخاب روز</option>
+                                ${days.map(d => `<option value="${d}">${d}</option>`).join('')}
+                                <option value="ALL">تمام روزها</option>
+                            </select>
+                            <select id="bulkHourSelect">
+                                <option value="">انتخاب ساعت</option>
+                                ${hours.map(h => `<option value="${h}">${h}</option>`).join('')}
+                                <option value="ALL">تمام ساعات</option>
+                            </select>
+                            <input type="text" id="bulkText" placeholder="متن جدید" style="flex:1;">
+                            <button id="bulkSetBtn" class="btn btn-primary">اعمال متن</button>
+                            <button id="bulkClearBtn" class="btn btn-secondary">پاک کردن انتخاب</button>
+                            <button id="bulkToggleCompleteBtn" class="btn btn-secondary">✓ تیک/لغو تیک</button>
+                        </div>
+
+                        <p style="font-size:0.8rem; color:gray; margin-bottom:10px;">نکته: با کلیک روی چک‌باکس می‌توانید انجام شدن را علامت بزنید.</p>
                         <div class="sheet-outer-container">
                             <table class="weekly-table">
                                 <thead>
@@ -2125,12 +2325,23 @@ body {
                                             <td class="time-label">${h}</td>
                                             ${days.map(d => {
                                                 const id = `${d}-${h}`;
-                                                const val = this.state.weeklyData[id] || '';
-                                                return `<td>
-                                                    <input class="cell-input" 
-                                                        value="${val}" 
-                                                        onchange="app.updateSheet('${id}', this.value)"
-                                                        placeholder="...">
+                                                let cellData = this.state.weeklyData[id];
+                                                if (!cellData || typeof cellData === 'string') {
+                                                    cellData = { text: cellData || '', completed: false };
+                                                }
+                                                const text = cellData.text || '';
+                                                const completed = cellData.completed || false;
+                                                const completedClass = completed ? 'cell-completed' : '';
+                                                return `<td class="${completedClass}">
+                                                    <div class="cell-container">
+                                                        <input type="text" class="cell-input" 
+                                                            value="${text.replace(/"/g, '&quot;')}" 
+                                                            onchange="app.updateWeeklyCell('${id}', this.value)"
+                                                            placeholder="...">
+                                                        <input type="checkbox" class="cell-checkbox" 
+                                                            ${completed ? 'checked' : ''} 
+                                                            onchange="app.toggleWeeklyComplete('${id}')">
+                                                    </div>
                                                 </td>`;
                                             }).join('')}
                                         </tr>
@@ -2140,12 +2351,79 @@ body {
                         </div>
                     </div>
                 `;
+
+                document.getElementById('bulkSetBtn')?.addEventListener('click', () => this.bulkOperation('set'));
+                document.getElementById('bulkClearBtn')?.addEventListener('click', () => this.bulkOperation('clear'));
+                document.getElementById('bulkToggleCompleteBtn')?.addEventListener('click', () => this.bulkOperation('toggle'));
             },
 
-            updateSheet(id, value) {
-                this.state.weeklyData[id] = value;
+            updateWeeklyCell(id, newText) {
+                let cell = this.state.weeklyData[id];
+                if (!cell || typeof cell === 'string') {
+                    cell = { text: cell || '', completed: false };
+                }
+                cell.text = newText;
+                this.state.weeklyData[id] = cell;
                 this.save();
-                this.toast("ذخیره شد", "success");
+                this.toast('ذخیره شد', 'success');
+            },
+
+            toggleWeeklyComplete(id) {
+                let cell = this.state.weeklyData[id];
+                if (!cell || typeof cell === 'string') {
+                    cell = { text: cell || '', completed: false };
+                }
+                cell.completed = !cell.completed;
+                this.state.weeklyData[id] = cell;
+                this.save();
+                if (this.state.currentView === 'weekly') {
+                    this.renderWeekly(document.getElementById('app-view'));
+                }
+            },
+
+            bulkOperation(op) {
+                const daySelect = document.getElementById('bulkDaySelect');
+                const hourSelect = document.getElementById('bulkHourSelect');
+                const bulkText = document.getElementById('bulkText');
+                const selectedDay = daySelect.value;
+                const selectedHour = hourSelect.value;
+                const newText = bulkText.value;
+
+                if (!selectedDay && !selectedHour) {
+                    this.toast('لطفاً حداقل یک روز یا یک ساعت را انتخاب کنید');
+                    return;
+                }
+
+                const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+                const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+
+                let affected = 0;
+                for (const day of days) {
+                    if (selectedDay !== 'ALL' && selectedDay !== day) continue;
+                    for (const hour of hours) {
+                        if (selectedHour !== 'ALL' && selectedHour !== hour) continue;
+                        const id = `${day}-${hour}`;
+                        let cell = this.state.weeklyData[id];
+                        if (!cell || typeof cell === 'string') {
+                            cell = { text: cell || '', completed: false };
+                        }
+                        if (op === 'set' && newText) {
+                            cell.text = newText;
+                        } else if (op === 'clear') {
+                            cell.text = '';
+                            cell.completed = false;
+                        } else if (op === 'toggle') {
+                            cell.completed = !cell.completed;
+                        }
+                        this.state.weeklyData[id] = cell;
+                        affected++;
+                    }
+                }
+                this.save();
+                this.toast(`✅ ${affected} خانه به‌روزرسانی شد`, 'success');
+                if (this.state.currentView === 'weekly') {
+                    this.renderWeekly(document.getElementById('app-view'));
+                }
             },
 
             /* ---------- ASSISTANT (SUPER INTELLIGENT) ---------- */
@@ -2375,7 +2653,10 @@ body {
                             const today = this.getWeekdayName(todayName);
                             const tasksToday = Object.entries(this.state.weeklyData)
                                 .filter(([key]) => key.startsWith(today))
-                                .map(([_, val]) => val)
+                                .map(([_, val]) => {
+                                    const cell = typeof val === 'string' ? { text: val, completed: false } : val;
+                                    return cell.text;
+                                })
                                 .filter(v => v.trim() !== "");
                             const response = tasksToday.length > 0 
                                 ? `📅 امروز ${today} این کارها رو داری: ${tasksToday.join('، ')}`
@@ -2458,7 +2739,10 @@ body {
                 const tomorrowKey = this.getWeekdayName(tomorrowName);
                 const tasksTomorrow = Object.entries(this.state.weeklyData)
                     .filter(([key]) => key.startsWith(tomorrowKey))
-                    .map(([_, val]) => val)
+                    .map(([_, val]) => {
+                        const cell = typeof val === 'string' ? { text: val, completed: false } : val;
+                        return cell.text;
+                    })
                     .filter(v => v.trim() !== "");
                 return tasksTomorrow.length > 0 
                     ? `📅 فردا ${tomorrowName} این کارها رو داری: ${tasksTomorrow.join('، ')}`
@@ -2606,16 +2890,55 @@ body {
             },
 
             attachEvents() {
-                document.querySelectorAll('.nav-item').forEach(item => {
+                document.querySelectorAll('.nav-item[data-view]').forEach(item => {
                     item.onclick = (e) => {
                         const view = e.currentTarget.dataset.view;
                         if (view) {
-                            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                            document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
                             e.currentTarget.classList.add('active');
                             this.state.currentView = view;
                             this.render();
                         }
                     };
+                });
+
+                document.getElementById('exportBtn')?.addEventListener('click', () => this.exportData());
+                document.getElementById('mobileExportBtn')?.addEventListener('click', () => this.exportData());
+                document.getElementById('importBtn')?.addEventListener('click', () => document.getElementById('importFile').click());
+                document.getElementById('mobileImportBtn')?.addEventListener('click', () => document.getElementById('importFile').click());
+
+                document.getElementById('importFile').addEventListener('change', (e) => this.importData(e));
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timer.running) {
+                        if (this.timer.interval) {
+                            clearInterval(this.timer.interval);
+                            this.timer.interval = null;
+                        }
+                        localStorage.setItem('zenith_timer_start', JSON.stringify({
+                            startTime: Date.now(),
+                            remaining: this.timer.timeLeft,
+                            total: this.timer.totalSeconds
+                        }));
+                    } else if (!document.hidden && !this.timer.running) {
+                        const saved = localStorage.getItem('zenith_timer_start');
+                        if (saved) {
+                            try {
+                                const { startTime, remaining, total } = JSON.parse(saved);
+                                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                                const newTimeLeft = Math.max(0, remaining - elapsed);
+                                this.timer.timeLeft = newTimeLeft;
+                                this.timer.totalSeconds = total;
+                                if (newTimeLeft > 0) {
+                                    this.timer.running = true;
+                                    this.startTimer();
+                                } else {
+                                    localStorage.removeItem('zenith_timer_start');
+                                    this.completeTimer();
+                                }
+                            } catch (e) {}
+                        }
+                    }
                 });
 
                 window.addEventListener('keydown', (e) => {
