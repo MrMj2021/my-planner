@@ -1138,7 +1138,10 @@ body {
                 <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
                 <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
                 <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
-                <!-- دکمه‌های Export/Import با id مجزا -->
+                <!-- NEW: Water Tracker -->
+                <div class="nav-item" data-view="water"><span>💧</span> آب خوردن</div>
+                <!-- NEW: Book Companion -->
+                <div class="nav-item" data-view="books"><span>📚</span> کتاب یار</div>
                 <div class="nav-item" id="exportBtn"><span>📤</span> خروجی</div>
                 <div class="nav-item" id="importBtn"><span>📥</span> ورودی</div>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
@@ -1166,6 +1169,8 @@ body {
                 <div class="nav-item" data-view="focus"><span>⏱️</span> تمرکز</div>
                 <div class="nav-item" data-view="stats"><span>📊</span> آمار</div>
                 <div class="nav-item" data-view="weekly"><span>📅</span> برنامه هفتگی</div>
+                <div class="nav-item" data-view="water"><span>💧</span> آب خوردن</div>
+                <div class="nav-item" data-view="books"><span>📚</span> کتاب یار</div>
                 <div class="nav-item" id="mobileExportBtn"><span>📤</span> خروجی</div>
                 <div class="nav-item" id="mobileImportBtn"><span>📥</span> ورودی</div>
             </nav>
@@ -1228,7 +1233,10 @@ body {
             lastVisit: null,
             focusSessions: [],
             xp: 0,
-            weeklyData: {}
+            weeklyData: {},
+            // new features
+            waterEntries: [], // each: { id, date, amount }
+            books: []        // each: { id, title, author, totalPages, currentPage, notes, startDate, finishDate }
         };
 
         const app = {
@@ -1247,7 +1255,6 @@ body {
             },
             alarmInterval: null,
             isInitialLoad: false,
-            // Assistant memory and context
             lastIntent: null,
             lastParams: {},
             conversationHistory: [],
@@ -1292,7 +1299,6 @@ body {
                 this.startClock();
                 this.startReminderChecker();
 
-                // Close drawer on mobile after navigation
                 document.querySelectorAll('.nav-item, .mobile-nav-item').forEach(item => {
                     item.addEventListener('click', () => {
                         if (window.innerWidth <= 768) {
@@ -1301,7 +1307,6 @@ body {
                     });
                 });
 
-                // بازیابی تایمر در حال اجرا
                 const savedTimer = localStorage.getItem('zenith_timer_start');
                 if (savedTimer) {
                     try {
@@ -1312,7 +1317,7 @@ body {
                         this.timer.totalSeconds = total;
                         if (newTimeLeft > 0) {
                             this.timer.running = true;
-                            this.startTimer(); // دوباره شروع می‌کند
+                            this.startTimer();
                         } else {
                             localStorage.removeItem('zenith_timer_start');
                             this.completeTimer();
@@ -1347,15 +1352,13 @@ body {
                 });
             },
 
-            // ========== توابع اصلاح شده برای عادات ==========
             checkMidnightReset() {
                 const today = new Date().toISOString().split('T')[0];
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
                 if (this.state.lastVisit !== today) {
+                    // reset habits daily completion (already resets completedToday)
                     this.state.habits.forEach(h => {
-                        // reset daily completion
                         h.completedToday = false;
-                        // reset streak if lastDone is older than yesterday
                         if (h.lastDone && h.lastDone !== yesterday && h.lastDone !== today) {
                             h.streak = 0;
                         }
@@ -1371,26 +1374,20 @@ body {
                 if (!h) return;
                 const today = new Date().toISOString().split('T')[0];
                 if (!h.completedToday) {
-                    // user is checking (completing)
                     h.completedToday = true;
-                    // compute streak
                     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
                     if (h.lastDone === yesterday) {
                         h.streak = (h.streak || 0) + 1;
                     } else if (h.lastDone !== today) {
-                        // either first time or broken streak
                         h.streak = 1;
                     }
                     h.lastDone = today;
                 } else {
-                    // user unchecks: only set completedToday false, streak unchanged
                     h.completedToday = false;
                 }
                 this.save();
                 this.render();
             },
-
-            // ===================================================
 
             startReminderChecker() {
                 if (this.alarmInterval) clearInterval(this.alarmInterval);
@@ -1458,6 +1455,8 @@ body {
                     case 'focus': this.renderFocus(view); break;
                     case 'goals': this.renderGoals(view); break;
                     case 'weekly': this.renderWeekly(view); break;
+                    case 'water': this.renderWaterView(view); break;
+                    case 'books': this.renderBooksView(view); break;
                 }
 
                 if (window.innerWidth <= 768) {
@@ -1769,7 +1768,7 @@ body {
                 }
             },
 
-            /* ---------- NOTES MODULE (ENHANCED) - بدون autosave مزاحم ---------- */
+            /* ---------- NOTES MODULE ---------- */
             renderNotes(container) {
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; flex-wrap:wrap; gap:1rem;">
@@ -1867,14 +1866,12 @@ body {
                 const textColorInput = document.getElementById('noteTextColor');
                 const fontSizeSelect = document.getElementById('noteFontSize');
                 
-                // فقط state محلی را به‌روز می‌کند، بدون ذخیره در Firebase (برای جلوگیری از رندر مجدد)
                 const updateLocalState = () => {
                     n.title = titleInput.value;
                     n.content = contentInput.value;
                     n.bgColor = bgColorInput.value;
                     n.textColor = textColorInput.value;
                     n.fontSize = fontSizeSelect.value;
-                    // ایندیکیتور موقت
                     const ind = document.getElementById('autosave-indicator');
                     ind.style.opacity = '1';
                     setTimeout(() => ind.style.opacity = '0', 1000);
@@ -1890,7 +1887,6 @@ body {
             saveNoteFromEditor(id) {
                 const n = this.state.notes.find(n => n.id === id);
                 if (!n) return;
-                // اطمینان از اینکه آخرین تغییرات در state هست (قبلاً updateLocalState انجام شده)
                 this.save();
                 this.toast('ذخیره شد');
             },
@@ -2079,7 +2075,7 @@ body {
                 }
             },
 
-            /* ---------- ENHANCED FOCUS MODULE با پشتیبانی از پس‌زمینه ---------- */
+            /* ---------- ENHANCED FOCUS MODULE ---------- */
             renderFocus(container) {
                 const totalToday = this.totalFocusToday();
                 const totalSessions = this.state.focusSessions.length;
@@ -2348,7 +2344,7 @@ body {
                 });
             },
 
-            /* ---------- ENHANCED WEEKLY PLANNER با قابلیت تیک و عملیات گروهی ---------- */
+            /* ---------- WEEKLY PLANNER ---------- */
             renderWeekly(container) {
                 const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
                 const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
@@ -2363,7 +2359,6 @@ body {
                             <div style="width:70px;"></div>
                         </div>
 
-                        <!-- نوار ابزار عملیات گروهی -->
                         <div class="weekly-toolbar">
                             <select id="bulkDaySelect">
                                 <option value="">انتخاب روز</option>
@@ -2388,11 +2383,11 @@ body {
                                     <tr>
                                         <th class="time-label">ساعت</th>
                                         ${days.map(d => `<th>${d}</th>`).join('')}
-                                    </tr>
+                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${hours.map(h => `
-                                        <tr>
+                                         <tr>
                                             <td class="time-label">${h}</td>
                                             ${days.map(d => {
                                                 const id = `${d}-${h}`;
@@ -2413,9 +2408,9 @@ body {
                                                             ${completed ? 'checked' : ''} 
                                                             onchange="app.toggleWeeklyComplete('${id}')">
                                                     </div>
-                                                </td>`;
+                                                 </td>`;
                                             }).join('')}
-                                        </tr>
+                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
@@ -2497,7 +2492,179 @@ body {
                 }
             },
 
-            /* ---------- ASSISTANT (SUPER INTELLIGENT) ---------- */
+            /* ========== NEW: WATER TRACKER ========== */
+            renderWaterView(container) {
+                const today = new Date().toISOString().split('T')[0];
+                const todayEntries = this.state.waterEntries.filter(e => e.date === today);
+                const totalToday = todayEntries.reduce((sum, e) => sum + e.amount, 0);
+                const last7Days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const dateStr = d.toISOString().split('T')[0];
+                    const dayTotal = this.state.waterEntries.filter(e => e.date === dateStr).reduce((s, e) => s + e.amount, 0);
+                    last7Days.push({ date: dateStr, total: dayTotal });
+                }
+
+                container.innerHTML = `
+                    <div class="glass-card">
+                        <h2>💧 ردیاب آب خوردن</h2>
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 800; color: var(--info);">${totalToday} ml</div>
+                            <div style="color: var(--text-secondary);">آب مصرف شده امروز</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; margin: 1.5rem 0;">
+                            <button class="btn btn-primary" onclick="app.addWater(250)">💧 + 250ml</button>
+                            <button class="btn btn-primary" onclick="app.addWater(500)">💧 + 500ml</button>
+                            <button class="btn btn-primary" onclick="app.addWater(1000)">💧 + 1L</button>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <h3>📊 آمار ۷ روز اخیر</h3>
+                            <div style="margin-top: 0.5rem;">
+                                ${last7Days.map(day => `
+                                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); padding: 0.5rem 0;">
+                                        <span>${new Date(day.date).toLocaleDateString('fa-IR')}</span>
+                                        <span style="font-weight: 600;">${day.total} ml</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            addWater(amount) {
+                const today = new Date().toISOString().split('T')[0];
+                this.state.waterEntries.push({ id: Date.now(), date: today, amount });
+                this.save();
+                this.toast(`✅ ${amount} ml آب اضافه شد`, 'success');
+                this.render(); // refresh current view
+            },
+
+            /* ========== NEW: BOOK COMPANION ========== */
+            renderBooksView(container) {
+                container.innerHTML = `
+                    <div class="glass-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <h2>📚 کتاب یار</h2>
+                            <button class="btn btn-primary" onclick="app.addBookPrompt()">+ کتاب جدید</button>
+                        </div>
+                        <div id="books-list" style="margin-top: 2rem;"></div>
+                    </div>
+                `;
+                this.renderBooksList();
+            },
+
+            renderBooksList() {
+                const list = document.getElementById('books-list');
+                if (!list) return;
+                if (this.state.books.length === 0) {
+                    list.innerHTML = '<div class="glass-card" style="text-align: center;">📖 هنوز کتابی اضافه نکرده‌اید.</div>';
+                    return;
+                }
+                list.innerHTML = this.state.books.map(b => {
+                    const percent = b.totalPages ? Math.round((b.currentPage / b.totalPages) * 100) : 0;
+                    const finishStatus = b.finishDate ? '✅ کامل شده' : (b.currentPage > 0 ? `📖 صفحه ${b.currentPage} از ${b.totalPages}` : 'شروع نشده');
+                    return `
+                        <div class="glass-card" style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="font-size: 1.2rem;">${b.title}</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">${b.author || 'نویسنده نامشخص'}</span>
+                            </div>
+                            <div style="margin: 0.5rem 0;">
+                                <div class="goal-progress-container">
+                                    <div class="goal-progress-fill" style="width: ${percent}%;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                                    <span>${finishStatus}</span>
+                                    <span>${percent}%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                                <button class="btn btn-secondary" onclick="app.updateBookPagePrompt('${b.id}')">📖 ثبت صفحه</button>
+                                <button class="btn btn-secondary" onclick="app.editBookPrompt('${b.id}')">✏️ ویرایش</button>
+                                <button class="btn btn-secondary" onclick="app.addBookNotePrompt('${b.id}')">📝 یادداشت</button>
+                                ${b.notes ? `<span style="font-size: 0.8rem; color: var(--text-secondary);">📌 یادداشت: ${b.notes}</span>` : ''}
+                                <button class="btn" style="color: var(--accent);" onclick="app.deleteBook('${b.id}')">🗑️ حذف</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            addBookPrompt() {
+                const title = prompt("عنوان کتاب:");
+                if (!title) return;
+                const author = prompt("نویسنده (اختیاری):") || "";
+                const totalPages = parseInt(prompt("تعداد کل صفحات:") || "0");
+                this.state.books.push({
+                    id: Date.now().toString(),
+                    title,
+                    author,
+                    totalPages: totalPages || 0,
+                    currentPage: 0,
+                    notes: "",
+                    startDate: new Date().toISOString(),
+                    finishDate: null
+                });
+                this.save();
+                this.toast(`کتاب "${title}" اضافه شد`);
+                this.renderBooksView(document.getElementById('app-view'));
+            },
+
+            updateBookPagePrompt(bookId) {
+                const book = this.state.books.find(b => b.id === bookId);
+                if (!book) return;
+                const page = parseInt(prompt(`صفحه خوانده شده (تا ${book.totalPages || 'نامحدود'}):`, book.currentPage));
+                if (isNaN(page)) return;
+                if (book.totalPages > 0 && page > book.totalPages) {
+                    this.toast("تعداد صفحات از کل کتاب بیشتر است", "error");
+                    return;
+                }
+                book.currentPage = page;
+                if (book.totalPages > 0 && page >= book.totalPages && !book.finishDate) {
+                    book.finishDate = new Date().toISOString();
+                    this.toast(`🎉 کتاب "${book.title}" کامل شد!`, "success");
+                    this.playAlarm();
+                }
+                this.save();
+                this.renderBooksView(document.getElementById('app-view'));
+            },
+
+            editBookPrompt(bookId) {
+                const book = this.state.books.find(b => b.id === bookId);
+                if (!book) return;
+                const newTitle = prompt("عنوان جدید:", book.title);
+                if (newTitle) book.title = newTitle;
+                const newAuthor = prompt("نویسنده جدید:", book.author);
+                if (newAuthor !== null) book.author = newAuthor;
+                const newTotal = parseInt(prompt("تعداد کل صفحات جدید:", book.totalPages));
+                if (!isNaN(newTotal)) book.totalPages = newTotal;
+                this.save();
+                this.toast("ویرایش ذخیره شد");
+                this.renderBooksView(document.getElementById('app-view'));
+            },
+
+            addBookNotePrompt(bookId) {
+                const book = this.state.books.find(b => b.id === bookId);
+                if (!book) return;
+                const note = prompt("یادداشت خود را وارد کنید:", book.notes || "");
+                if (note !== null) book.notes = note;
+                this.save();
+                this.toast("یادداشت ذخیره شد");
+                this.renderBooksView(document.getElementById('app-view'));
+            },
+
+            deleteBook(bookId) {
+                if (confirm("آیا از حذف این کتاب اطمینان دارید؟")) {
+                    this.state.books = this.state.books.filter(b => b.id !== bookId);
+                    this.save();
+                    this.toast("کتاب حذف شد");
+                    this.renderBooksView(document.getElementById('app-view'));
+                }
+            },
+
+            /* ---------- ASSISTANT ---------- */
             toggleChat() {
                 const win = document.getElementById('chat-window');
                 win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
@@ -2647,124 +2814,18 @@ body {
                 }
 
                 const intents = [
-                    {
-                        name: 'tasks_pending',
-                        keywords: ['تسک', 'وظیفه', 'کار'],
-                        handler: () => {
-                            const pending = this.state.tasks.filter(t => !t.completed).length;
-                            const total = this.state.tasks.length;
-                            if (total === 0) return "📭 شما هیچ وظیفه‌ای ندارید.";
-                            return `📋 شما ${total} وظیفه داری که ${pending} تاش انجام نشده.`;
-                        }
-                    },
-                    {
-                        name: 'tasks_completed_today',
-                        keywords: ['امروز', 'چند', 'تسک', 'انجام'],
-                        handler: () => {
-                            const today = new Date().toDateString();
-                            const completedToday = this.state.tasks.filter(t => t.completed && new Date(t.completedAt || 0).toDateString() === today).length;
-                            return `✅ امروز ${completedToday} تسک انجام دادی.`;
-                        }
-                    },
-                    {
-                        name: 'last_task',
-                        keywords: ['آخرین', 'تسک', 'وظیفه', 'انجام'],
-                        handler: () => {
-                            const lastTask = this.state.tasks.filter(t => t.completed).pop();
-                            if (lastTask) return `🔚 آخرین کاری که تیک زدی: "${lastTask.title}" بود.`;
-                            return "هنوز هیچ تسکی رو کامل نکردی.";
-                        }
-                    },
-                    {
-                        name: 'habits_today',
-                        keywords: ['عادت', 'امروز', 'چند'],
-                        handler: () => {
-                            const completed = this.state.habits.filter(h => h.completedToday).length;
-                            const total = this.state.habits.length;
-                            if (total === 0) return "📭 هیچ عادتی ثبت نشده.";
-                            return `🔥 امروز ${completed} از ${total} عادت رو انجام دادی.`;
-                        }
-                    },
-                    {
-                        name: 'goals_count',
-                        keywords: ['هدف', 'چند'],
-                        handler: () => {
-                            const total = this.state.goals.length;
-                            const completed = this.state.goals.filter(g => g.current >= g.target).length;
-                            return `🎯 شما ${total} هدف داری که ${completed} تاش کامل شده.`;
-                        }
-                    },
-                    {
-                        name: 'xp',
-                        keywords: ['xp', 'امتیاز'],
-                        handler: () => `✨ شما ${this.state.xp} امتیاز XP داری.`
-                    },
-                    {
-                        name: 'focus_today',
-                        keywords: ['تمرکز', 'امروز', 'چند'],
-                        handler: () => {
-                            const minutes = this.totalFocusToday();
-                            return `⏱️ امروز ${Math.round(minutes)} دقیقه تمرکز داشتی.`;
-                        }
-                    },
-                    {
-                        name: 'reminders_today',
-                        keywords: ['یادآور', 'امروز', 'چند'],
-                        handler: () => {
-                            const todayReminders = this.state.reminders;
-                            if (todayReminders.length === 0) return "⏰ هیچ یادآوری برای امروز نداری.";
-                            return `⏰ ${todayReminders.length} یادآور داری: ${todayReminders.map(r => r.text).join('، ')}`;
-                        }
-                    },
-                    {
-                        name: 'weekly_today',
-                        keywords: ['برنامه', 'امروز', 'چی'],
-                        handler: () => {
-                            const todayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date());
-                            const today = this.getWeekdayName(todayName);
-                            const tasksToday = Object.entries(this.state.weeklyData)
-                                .filter(([key]) => key.startsWith(today))
-                                .map(([_, val]) => {
-                                    const cell = typeof val === 'string' ? { text: val, completed: false } : val;
-                                    return cell.text;
-                                })
-                                .filter(v => v.trim() !== "");
-                            const response = tasksToday.length > 0 
-                                ? `📅 امروز ${today} این کارها رو داری: ${tasksToday.join('، ')}`
-                                : `📅 امروز ${today} برنامه خاصی نداری.`;
-                            this.lastIntent = 'weekly_today';
-                            return response;
-                        }
-                    },
-                    {
-                        name: 'weekly_tomorrow',
-                        keywords: ['برنامه', 'فردا', 'چی'],
-                        handler: () => {
-                            return this.handleWeeklyTomorrow();
-                        }
-                    },
-                    {
-                        name: 'notes_search',
-                        keywords: ['یادداشت', 'درباره', 'جستجو'],
-                        handler: (input) => {
-                            const query = input.replace(/یادداشت|درباره|جستجو/gi, '').trim();
-                            if (!query) return "چی رو در یادداشت‌ها جستجو کنم؟";
-                            const found = this.state.notes.filter(n => n.title.includes(query) || n.content.includes(query));
-                            if (found.length === 0) return `❌ هیچ یادداشتی درباره "${query}" پیدا نکردم.`;
-                            return `📝 ${found.length} یادداشت پیدا کردم. مثلاً: "${found[0].title}"`;
-                        }
-                    },
-                    {
-                        name: 'summary',
-                        keywords: ['خلاصه', 'امروز', 'گزارش'],
-                        handler: () => {
-                            const tasksPending = this.state.tasks.filter(t => !t.completed).length;
-                            const habitsCompleted = this.state.habits.filter(h => h.completedToday).length;
-                            const focusMinutes = Math.round(this.totalFocusToday());
-                            const xp = this.state.xp;
-                            return `📊 خلاصه امروز:\n✅ وظایف انجام نشده: ${tasksPending}\n🔥 عادات انجام شده: ${habitsCompleted}\n⏱️ تمرکز: ${focusMinutes} دقیقه\n✨ XP: ${xp}`;
-                        }
-                    }
+                    { name: 'tasks_pending', keywords: ['تسک', 'وظیفه', 'کار'], handler: () => { const pending = this.state.tasks.filter(t => !t.completed).length; const total = this.state.tasks.length; if (total === 0) return "📭 شما هیچ وظیفه‌ای ندارید."; return `📋 شما ${total} وظیفه داری که ${pending} تاش انجام نشده.`; } },
+                    { name: 'tasks_completed_today', keywords: ['امروز', 'چند', 'تسک', 'انجام'], handler: () => { const today = new Date().toDateString(); const completedToday = this.state.tasks.filter(t => t.completed && new Date(t.completedAt || 0).toDateString() === today).length; return `✅ امروز ${completedToday} تسک انجام دادی.`; } },
+                    { name: 'last_task', keywords: ['آخرین', 'تسک', 'وظیفه', 'انجام'], handler: () => { const lastTask = this.state.tasks.filter(t => t.completed).pop(); if (lastTask) return `🔚 آخرین کاری که تیک زدی: "${lastTask.title}" بود.`; return "هنوز هیچ تسکی رو کامل نکردی."; } },
+                    { name: 'habits_today', keywords: ['عادت', 'امروز', 'چند'], handler: () => { const completed = this.state.habits.filter(h => h.completedToday).length; const total = this.state.habits.length; if (total === 0) return "📭 هیچ عادتی ثبت نشده."; return `🔥 امروز ${completed} از ${total} عادت رو انجام دادی.`; } },
+                    { name: 'goals_count', keywords: ['هدف', 'چند'], handler: () => { const total = this.state.goals.length; const completed = this.state.goals.filter(g => g.current >= g.target).length; return `🎯 شما ${total} هدف داری که ${completed} تاش کامل شده.`; } },
+                    { name: 'xp', keywords: ['xp', 'امتیاز'], handler: () => `✨ شما ${this.state.xp} امتیاز XP داری.` },
+                    { name: 'focus_today', keywords: ['تمرکز', 'امروز', 'چند'], handler: () => { const minutes = this.totalFocusToday(); return `⏱️ امروز ${Math.round(minutes)} دقیقه تمرکز داشتی.`; } },
+                    { name: 'reminders_today', keywords: ['یادآور', 'امروز', 'چند'], handler: () => { const todayReminders = this.state.reminders; if (todayReminders.length === 0) return "⏰ هیچ یادآوری برای امروز نداری."; return `⏰ ${todayReminders.length} یادآور داری: ${todayReminders.map(r => r.text).join('، ')}`; } },
+                    { name: 'weekly_today', keywords: ['برنامه', 'امروز', 'چی'], handler: () => { const todayName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(new Date()); const today = this.getWeekdayName(todayName); const tasksToday = Object.entries(this.state.weeklyData).filter(([key]) => key.startsWith(today)).map(([_, val]) => { const cell = typeof val === 'string' ? { text: val, completed: false } : val; return cell.text; }).filter(v => v.trim() !== ""); const response = tasksToday.length > 0 ? `📅 امروز ${today} این کارها رو داری: ${tasksToday.join('، ')}` : `📅 امروز ${today} برنامه خاصی نداری.`; this.lastIntent = 'weekly_today'; return response; } },
+                    { name: 'weekly_tomorrow', keywords: ['برنامه', 'فردا', 'چی'], handler: () => this.handleWeeklyTomorrow() },
+                    { name: 'notes_search', keywords: ['یادداشت', 'درباره', 'جستجو'], handler: (input) => { const query = input.replace(/یادداشت|درباره|جستجو/gi, '').trim(); if (!query) return "چی رو در یادداشت‌ها جستجو کنم؟"; const found = this.state.notes.filter(n => n.title.includes(query) || n.content.includes(query)); if (found.length === 0) return `❌ هیچ یادداشتی درباره "${query}" پیدا نکردم.`; return `📝 ${found.length} یادداشت پیدا کردم. مثلاً: "${found[0].title}"`; } },
+                    { name: 'summary', keywords: ['خلاصه', 'امروز', 'گزارش'], handler: () => { const tasksPending = this.state.tasks.filter(t => !t.completed).length; const habitsCompleted = this.state.habits.filter(h => h.completedToday).length; const focusMinutes = Math.round(this.totalFocusToday()); const xp = this.state.xp; return `📊 خلاصه امروز:\n✅ وظایف انجام نشده: ${tasksPending}\n🔥 عادات انجام شده: ${habitsCompleted}\n⏱️ تمرکز: ${focusMinutes} دقیقه\n✨ XP: ${xp}`; } }
                 ];
 
                 let bestIntent = null;
@@ -2808,28 +2869,12 @@ body {
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 const tomorrowName = new Intl.DateTimeFormat('fa-IR', { weekday: 'long' }).format(tomorrow);
                 const tomorrowKey = this.getWeekdayName(tomorrowName);
-                const tasksTomorrow = Object.entries(this.state.weeklyData)
-                    .filter(([key]) => key.startsWith(tomorrowKey))
-                    .map(([_, val]) => {
-                        const cell = typeof val === 'string' ? { text: val, completed: false } : val;
-                        return cell.text;
-                    })
-                    .filter(v => v.trim() !== "");
-                return tasksTomorrow.length > 0 
-                    ? `📅 فردا ${tomorrowName} این کارها رو داری: ${tasksTomorrow.join('، ')}`
-                    : `📅 فردا ${tomorrowName} برنامه خاصی نداری.`;
+                const tasksTomorrow = Object.entries(this.state.weeklyData).filter(([key]) => key.startsWith(tomorrowKey)).map(([_, val]) => { const cell = typeof val === 'string' ? { text: val, completed: false } : val; return cell.text; }).filter(v => v.trim() !== "");
+                return tasksTomorrow.length > 0 ? `📅 فردا ${tomorrowName} این کارها رو داری: ${tasksTomorrow.join('، ')}` : `📅 فردا ${tomorrowName} برنامه خاصی نداری.`;
             },
 
             getWeekdayName(faName) {
-                const map = {
-                    "شنبه": "شنبه",
-                    "یکشنبه": "یکشنبه",
-                    "دوشنبه": "دوشنبه",
-                    "سه‌شنبه": "سه‌شنبه",
-                    "چهارشنبه": "چهارشنبه",
-                    "پنجشنبه": "پنجشنبه",
-                    "جمعه": "جمعه"
-                };
+                const map = { "شنبه": "شنبه", "یکشنبه": "یکشنبه", "دوشنبه": "دوشنبه", "سه‌شنبه": "سه‌شنبه", "چهارشنبه": "چهارشنبه", "پنجشنبه": "پنجشنبه", "جمعه": "جمعه" };
                 return map[faName] || faName;
             },
 
@@ -2842,7 +2887,6 @@ body {
                 if (this.state.currentView === 'habits') this.renderHabitsList();
             },
 
-            /* ---------- CORE UTILITIES ---------- */
             addTask(title) {
                 if(!title) return;
                 this.state.tasks.push({ id: Date.now(), title, completed: false, priority: 'medium', completedAt: null });
